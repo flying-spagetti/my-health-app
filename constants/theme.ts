@@ -1,41 +1,198 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Design system tokens for the health tracker app
+ * Following the requirements for a calm, minimal, Apple-Health-meets-Headspace aesthetic
  */
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+// Base colors for the health app
+// Calm, minimal palette inspired by premium wellness apps
+const primaryColor = '#4F46E5';  // indigo-600
+const successColor = '#22C55E';  // green-500
+const dangerColor = '#EF4444';   // red-500
+const accentColor = '#F97316';   // orange-500
 
+// Dark theme (default as per requirements)
+export const darkTheme = {
+  colors: {
+    // Core surfaces
+    background: '#020617',    // app background
+    surface: '#020617',       // main surface
+    elevatedSurface: '#020617', // slightly elevated surface (cards)
+    card: '#020617',
+    border: '#1E293B',
+    
+    // Text colors
+    text: '#E5E7EB',           // Primary text (gray-200)
+    textSecondary: '#9CA3AF',  // Secondary text (gray-400)
+    textMuted: '#6B7280',      // Muted text (gray-500)
+    
+    // Brand colors
+    primary: primaryColor,
+    primaryLight: '#6366F1',
+    primaryDark: '#4338CA',
+    
+    // Status colors
+    success: successColor,
+    warning: '#F59E0B',
+    danger: dangerColor,
+    info: '#3B82F6',
+    
+    // Accent colors
+    accent: accentColor,
+    accentLight: '#FDBA74',
+    
+    // Navigation
+    tint: '#E5E7EB',
+    tabIconDefault: '#6B7280',
+    tabIconSelected: primaryColor,
+  },
+  spacing: {
+    xs: 4,
+    sm: 8,
+    md: 16,
+    lg: 24,
+    xl: 32,
+    xxl: 48,
+  },
+  borderRadius: {
+    sm: 8,
+    md: 16,
+    lg: 24,
+    xl: 32,
+  },
+  typography: {
+    h1: 28,
+    h2: 22,
+    h3: 18,
+    body: 16,
+    caption: 14,
+    small: 12,
+  },
+  shadows: {
+    sm: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    md: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 4,
+      elevation: 4,
+    },
+    lg: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+      elevation: 8,
+    },
+  },
+};
+
+// Light theme (for future use)
+export const lightTheme = {
+  colors: {
+    // Core surfaces
+    background: '#F8FAFC',
+    surface: '#FFFFFF',
+    elevatedSurface: '#F9FAFB',
+    card: '#FFFFFF',
+    border: '#E2E8F0',
+    
+    // Text colors
+    text: '#0F172A',
+    textSecondary: '#475569',
+    textMuted: '#94A3B8',
+    
+    // Brand colors
+    primary: primaryColor,
+    primaryLight: '#6366F1',
+    primaryDark: '#4338CA',
+    
+    // Status colors
+    success: successColor,
+    warning: '#F59E0B',
+    danger: dangerColor,
+    info: '#3B82F6',
+    
+    // Accent colors
+    accent: accentColor,
+    accentLight: '#FDBA74',
+    
+    // Navigation
+    tint: primaryColor,
+    tabIconDefault: '#9CA3AF',
+    tabIconSelected: primaryColor,
+  },
+  spacing: darkTheme.spacing,
+  borderRadius: darkTheme.borderRadius,
+  typography: darkTheme.typography,
+  shadows: {
+    sm: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+    md: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    lg: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+  },
+};
+
+// Helper to get tokens for a given color scheme
+export function getThemeTokens(colorScheme: 'light' | 'dark' | null | undefined) {
+  if (colorScheme === 'light') {
+    return lightTheme;
+  }
+  return darkTheme;
+}
+
+// Default tokens (used when no scheme is available)
+export const tokens = darkTheme;
+
+// Legacy Colors export for compatibility
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: lightTheme.colors.text,
+    background: lightTheme.colors.background,
+    tint: lightTheme.colors.tint,
+    icon: lightTheme.colors.tabIconDefault,
+    tabIconDefault: lightTheme.colors.tabIconDefault,
+    tabIconSelected: lightTheme.colors.tabIconSelected,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    text: darkTheme.colors.text,
+    background: darkTheme.colors.background,
+    tint: darkTheme.colors.tint,
+    icon: darkTheme.colors.tabIconDefault,
+    tabIconDefault: darkTheme.colors.tabIconDefault,
+    tabIconSelected: darkTheme.colors.tabIconSelected,
   },
 };
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {
