@@ -94,40 +94,45 @@ export const darkTheme = {
   },
 };
 
-// Light theme (for future use)
+// Light theme (modern health app design)
 export const lightTheme = {
   colors: {
-    // Core surfaces
-    background: '#F8FAFC',
-    surface: '#FFFFFF',
-    elevatedSurface: '#F9FAFB',
+    // Core surfaces - light, clean background
+    background: '#FFFFFF',
+    surface: '#F8F9FA',
+    elevatedSurface: '#FFFFFF',
     card: '#FFFFFF',
-    border: '#E2E8F0',
+    border: '#E5E7EB',
     
     // Text colors
-    text: '#0F172A',
-    textSecondary: '#475569',
-    textMuted: '#94A3B8',
+    text: '#111827',
+    textSecondary: '#374151',
+    textMuted: '#6B7280',
     
-    // Brand colors
-    primary: primaryColor,
-    primaryLight: '#6366F1',
-    primaryDark: '#4338CA',
+    // Brand colors - modern blue
+    primary: '#3B82F6',  // blue-500
+    primaryLight: '#60A5FA',
+    primaryDark: '#2563EB',
     
     // Status colors
-    success: successColor,
+    success: '#10B981',  // green-500
     warning: '#F59E0B',
-    danger: dangerColor,
+    danger: '#EF4444',
     info: '#3B82F6',
     
     // Accent colors
-    accent: accentColor,
-    accentLight: '#FDBA74',
+    accent: '#8B5CF6',  // purple-500
+    accentLight: '#A78BFA',
+    
+    // Activity colors
+    activityBlue: '#3B82F6',
+    activityRed: '#EF4444',
+    activityGreen: '#10B981',
     
     // Navigation
-    tint: primaryColor,
+    tint: '#3B82F6',
     tabIconDefault: '#9CA3AF',
-    tabIconSelected: primaryColor,
+    tabIconSelected: '#3B82F6',
   },
   spacing: darkTheme.spacing,
   borderRadius: darkTheme.borderRadius,

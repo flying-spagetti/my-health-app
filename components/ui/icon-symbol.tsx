@@ -18,6 +18,26 @@ const MAPPING = {
   'paperplane.fill': 'send',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
+  'person.fill': 'person',
+  'gearshape.fill': 'settings',
+  'plus': 'add',
+  'xmark': 'close',
+  'flame.fill': 'local-fire-department',
+  'star.fill': 'star',
+  'bicycle': 'directions-bike',
+  'figure.run': 'directions-run',
+  'figure.walk': 'directions-walk',
+  'figure.pool.swim': 'pool',
+  'figure.yoga': 'self-improvement',
+  'dumbbell.fill': 'fitness-center',
+  'moon.fill': 'nightlight',
+  'book.fill': 'menu-book',
+  'pills.fill': 'medication',
+  // Additional mappings for activity icons
+  'figure.run': 'directions-run',
+  'figure.walk': 'directions-walk',
+  'figure.pool.swim': 'pool',
+  'figure.yoga': 'self-improvement',
 } as IconMapping;
 
 /**

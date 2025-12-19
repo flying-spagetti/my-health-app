@@ -1218,3 +1218,183 @@ export function getTrackingEventsByDate(date: number): Promise<any[]> {
     }
   });
 }
+
+// ========== Workout Functions ==========
+export function getWorkouts(startDate?: number, endDate?: number): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    try {
+      let query = `SELECT * FROM workouts ORDER BY started_at DESC`;
+      const params: any[] = [];
+      
+      if (startDate && endDate) {
+        query = `SELECT * FROM workouts WHERE started_at >= ? AND started_at <= ? ORDER BY started_at DESC`;
+        params.push(startDate, endDate);
+      } else if (startDate) {
+        query = `SELECT * FROM workouts WHERE started_at >= ? ORDER BY started_at DESC`;
+        params.push(startDate);
+      }
+      
+      const result = db.getAllSync(query, params);
+      resolve(result || []);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function saveWorkout(workout: {
+  workout_type: string;
+  duration: number;
+  intensity?: string;
+  calories_burned?: number;
+  note?: string;
+  started_at?: number;
+  ended_at?: number;
+}): Promise<string> {
+  return new Promise((resolve, reject) => {
+    try {
+      const id = generateId();
+      const startedAt = workout.started_at || Date.now();
+      const endedAt = workout.ended_at || startedAt + (workout.duration * 60 * 1000);
+      
+      db.runSync(
+        `INSERT INTO workouts (id, workout_type, duration, intensity, calories_burned, note, started_at, ended_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          workout.workout_type,
+          workout.duration,
+          workout.intensity || null,
+          workout.calories_burned || null,
+          workout.note || '',
+          startedAt,
+          endedAt,
+        ]
+      );
+      resolve(id);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+// ========== Steps Functions ==========
+export function getSteps(startDate?: number, endDate?: number): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    try {
+      let query = `SELECT * FROM steps ORDER BY date DESC`;
+      const params: any[] = [];
+      
+      if (startDate && endDate) {
+        query = `SELECT * FROM steps WHERE date >= ? AND date <= ? ORDER BY date DESC`;
+        params.push(startDate, endDate);
+      } else if (startDate) {
+        query = `SELECT * FROM steps WHERE date >= ? ORDER BY date DESC`;
+        params.push(startDate);
+      }
+      
+      const result = db.getAllSync(query, params);
+      resolve(result || []);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function saveSteps(steps: { steps: number; date?: number; source?: string }): Promise<string> {
+  return new Promise((resolve, reject) => {
+    try {
+      const id = generateId();
+      const date = steps.date || Date.now();
+      
+      db.runSync(
+        `INSERT INTO steps (id, steps, date, source)
+         VALUES (?, ?, ?, ?)`,
+        [id, steps.steps, date, steps.source || 'manual']
+      );
+      resolve(id);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+// ========== Activity Aggregates ==========
+export function getActivityAggregates(
+  period: 'week' | 'month' | 'year' | 'all'
+): Promise<Array<{ day: string; value: number; date: number }>> {
+  return new Promise((resolve, reject) => {
+    try {
+      const now = Date.now();
+      let startDate: number;
+      let days: number;
+      
+      switch (period) {
+        case 'week':
+          days = 7;
+          startDate = now - (7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'month':
+          days = 30;
+          startDate = now - (30 * 24 * 60 * 60 * 1000);
+          break;
+        case 'year':
+          days = 365;
+          startDate = now - (365 * 24 * 60 * 60 * 1000);
+          break;
+        default:
+          days = 7;
+          startDate = 0;
+      }
+      
+      // Get workouts in the period
+      const workouts = db.getAllSync(
+        `SELECT * FROM workouts WHERE started_at >= ? ORDER BY started_at ASC`,
+        [startDate]
+      ) || [];
+      
+      // Group by day
+      const dayMap = new Map<number, number>();
+      const dayLabels = new Map<number, string>();
+      
+      for (let i = 0; i < days; i++) {
+        const date = new Date(now - (i * 24 * 60 * 60 * 1000));
+        date.setHours(0, 0, 0, 0);
+        const timestamp = date.getTime();
+        dayMap.set(timestamp, 0);
+        
+        if (period === 'week') {
+          const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          dayLabels.set(timestamp, dayNames[date.getDay()]);
+        } else {
+          dayLabels.set(timestamp, date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+        }
+      }
+      
+      // Aggregate workout durations by day
+      workouts.forEach((workout: any) => {
+        const date = new Date(workout.started_at);
+        date.setHours(0, 0, 0, 0);
+        const timestamp = date.getTime();
+        const current = dayMap.get(timestamp) || 0;
+        dayMap.set(timestamp, current + (workout.duration || 0));
+      });
+      
+      // Convert to array
+      const aggregates: Array<{ day: string; value: number; date: number }> = [];
+      const sortedDates = Array.from(dayMap.keys()).sort();
+      
+      sortedDates.forEach((timestamp) => {
+        aggregates.push({
+          day: dayLabels.get(timestamp) || '',
+          value: dayMap.get(timestamp) || 0,
+          date: timestamp,
+        });
+      });
+      
+      resolve(aggregates);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
