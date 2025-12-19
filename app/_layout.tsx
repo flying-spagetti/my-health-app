@@ -1,4 +1,5 @@
 import { initDb } from '@/services/db';
+import { rescheduleAllReminders } from '@/services/reminders';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -17,6 +18,13 @@ function RootLayoutInner() {
 
   useEffect(() => {
     initDb();
+    // Schedule reminders after a delay to ensure DB is ready
+    // Only schedule once on app start, not on every render
+    const timeoutId = setTimeout(() => {
+      rescheduleAllReminders().catch(console.error);
+    }, 2000);
+    
+    return () => clearTimeout(timeoutId);
   }, []);
 
   const tokens = colorScheme === 'light' ? lightTheme : darkTheme;
@@ -124,6 +132,73 @@ function RootLayoutInner() {
           options={{ 
             presentation: 'modal', 
             title: 'Add Journal Entry',
+            headerShown: true,
+            headerStyle: {
+              backgroundColor: '#0F1720',
+            },
+            headerTintColor: '#EDF2F7',
+          }} 
+        />
+        <Stack.Screen 
+          name="add-appointment" 
+          options={{ 
+            presentation: 'modal', 
+            title: 'Add Appointment',
+            headerShown: true,
+            headerStyle: {
+              backgroundColor: '#0F1720',
+            },
+            headerTintColor: '#EDF2F7',
+          }} 
+        />
+        <Stack.Screen 
+          name="med-tracker" 
+          options={{ 
+            title: 'Medication Tracker',
+            headerShown: true,
+            headerStyle: {
+              backgroundColor: '#0F1720',
+            },
+            headerTintColor: '#EDF2F7',
+          }} 
+        />
+        <Stack.Screen 
+          name="supplement-tracker" 
+          options={{ 
+            title: 'Supplement Tracker',
+            headerShown: true,
+            headerStyle: {
+              backgroundColor: '#0F1720',
+            },
+            headerTintColor: '#EDF2F7',
+          }} 
+        />
+        <Stack.Screen 
+          name="meditation-tracker" 
+          options={{ 
+            title: 'Meditation Tracker',
+            headerShown: true,
+            headerStyle: {
+              backgroundColor: '#0F1720',
+            },
+            headerTintColor: '#EDF2F7',
+          }} 
+        />
+        <Stack.Screen 
+          name="migraine-tracker" 
+          options={{ 
+            title: 'Migraine Tracker',
+            headerShown: true,
+            headerStyle: {
+              backgroundColor: '#0F1720',
+            },
+            headerTintColor: '#EDF2F7',
+          }} 
+        />
+        <Stack.Screen 
+          name="appointment-tracker" 
+          options={{ 
+            title: 'Appointments',
             headerShown: true,
             headerStyle: {
               backgroundColor: '#0F1720',

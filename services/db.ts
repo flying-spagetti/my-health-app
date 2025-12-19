@@ -180,14 +180,29 @@ export function initDb() {
       );
     `);
 
-    // Journal entries
+    // Journal entries (enhanced for comprehensive state tracking)
     db.execSync(`
       CREATE TABLE IF NOT EXISTS journals (
         id TEXT PRIMARY KEY,
         user_id TEXT DEFAULT 'local-user',
         entry_date INTEGER NOT NULL,
         mood TEXT,
+        mood_intensity INTEGER CHECK (mood_intensity >= 1 AND mood_intensity <= 10),
         energy_level INTEGER CHECK (energy_level >= 1 AND energy_level <= 10),
+        stress_level INTEGER CHECK (stress_level >= 1 AND stress_level <= 10),
+        sleep_quality INTEGER CHECK (sleep_quality >= 1 AND sleep_quality <= 10),
+        sleep_hours REAL,
+        physical_symptoms TEXT,
+        social_activity TEXT,
+        exercise_duration INTEGER,
+        exercise_type TEXT,
+        nutrition_quality INTEGER CHECK (nutrition_quality >= 1 AND nutrition_quality <= 10),
+        hydration_glasses INTEGER,
+        weather TEXT,
+        location TEXT,
+        gratitude TEXT,
+        goals_achieved TEXT,
+        challenges TEXT,
         note TEXT,
         tags TEXT,
         created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
@@ -268,6 +283,112 @@ export function initDb() {
       );
     `);
 
+    // Migrate existing tables - add new columns if they don't exist
+    try {
+      // Check if medications table exists and has start_date column
+      const tables = db.getAllSync(`SELECT name FROM sqlite_master WHERE type='table' AND name='medications'`);
+      if (tables.length > 0) {
+        const medColumns = db.getAllSync(`PRAGMA table_info(medications)`);
+        const hasStartDate = medColumns.some((col: any) => col.name === 'start_date');
+        if (!hasStartDate) {
+          db.execSync(`ALTER TABLE medications ADD COLUMN start_date INTEGER;`);
+          db.execSync(`ALTER TABLE medications ADD COLUMN notes TEXT;`);
+          db.execSync(`ALTER TABLE medications ADD COLUMN end_date INTEGER;`);
+          db.execSync(`ALTER TABLE medications ADD COLUMN prescribing_doctor TEXT;`);
+          // Update existing rows to have start_date = created_at
+          db.execSync(`UPDATE medications SET start_date = created_at WHERE start_date IS NULL;`);
+        }
+      }
+    } catch (error) {
+      console.log('Migration for medications table:', error);
+    }
+
+    try {
+      // Check if supplements table exists and has start_date column
+      const tables = db.getAllSync(`SELECT name FROM sqlite_master WHERE type='table' AND name='supplements'`);
+      if (tables.length > 0) {
+        const suppColumns = db.getAllSync(`PRAGMA table_info(supplements)`);
+        const hasStartDate = suppColumns.some((col: any) => col.name === 'start_date');
+        if (!hasStartDate) {
+          db.execSync(`ALTER TABLE supplements ADD COLUMN start_date INTEGER;`);
+          db.execSync(`ALTER TABLE supplements ADD COLUMN notes TEXT;`);
+          db.execSync(`ALTER TABLE supplements ADD COLUMN end_date INTEGER;`);
+          // Update existing rows
+          db.execSync(`UPDATE supplements SET start_date = created_at WHERE start_date IS NULL;`);
+        }
+      }
+    } catch (error) {
+      console.log('Migration for supplements table:', error);
+    }
+
+    try {
+      // Check if meditation_routines table exists
+      const routinesCheck = db.getAllSync(`SELECT name FROM sqlite_master WHERE type='table' AND name='meditation_routines'`);
+      if (routinesCheck.length === 0) {
+        // Table doesn't exist, it will be created above
+      } else {
+        // Table exists, check if it has start_date
+        const routineColumns = db.getAllSync(`PRAGMA table_info(meditation_routines)`);
+        const hasStartDate = routineColumns.some((col: any) => col.name === 'start_date');
+        if (!hasStartDate) {
+          db.execSync(`ALTER TABLE meditation_routines ADD COLUMN start_date INTEGER;`);
+          db.execSync(`UPDATE meditation_routines SET start_date = created_at WHERE start_date IS NULL;`);
+        }
+      }
+    } catch (error) {
+      console.log('Migration for meditation_routines table:', error);
+    }
+
+    try {
+      // Migrate meditation_sessions to add routine_id if it doesn't exist
+      const sessionColumns = db.getAllSync(`PRAGMA table_info(meditation_sessions)`);
+      const hasRoutineId = sessionColumns.some((col: any) => col.name === 'routine_id');
+      if (!hasRoutineId) {
+        db.execSync(`ALTER TABLE meditation_sessions ADD COLUMN routine_id TEXT;`);
+      }
+    } catch (error) {
+      console.log('Migration for meditation_sessions table:', error);
+    }
+
+    try {
+      // Migrate journals table to add new comprehensive fields
+      const tables = db.getAllSync(`SELECT name FROM sqlite_master WHERE type='table' AND name='journals'`);
+      if (tables.length > 0) {
+        const journalColumns = db.getAllSync(`PRAGMA table_info(journals)`);
+        const columnNames = journalColumns.map((col: any) => col.name);
+        
+        const newColumns = [
+          { name: 'mood_intensity', type: 'INTEGER' },
+          { name: 'stress_level', type: 'INTEGER' },
+          { name: 'sleep_quality', type: 'INTEGER' },
+          { name: 'sleep_hours', type: 'REAL' },
+          { name: 'physical_symptoms', type: 'TEXT' },
+          { name: 'social_activity', type: 'TEXT' },
+          { name: 'exercise_duration', type: 'INTEGER' },
+          { name: 'exercise_type', type: 'TEXT' },
+          { name: 'nutrition_quality', type: 'INTEGER' },
+          { name: 'hydration_glasses', type: 'INTEGER' },
+          { name: 'weather', type: 'TEXT' },
+          { name: 'location', type: 'TEXT' },
+          { name: 'gratitude', type: 'TEXT' },
+          { name: 'goals_achieved', type: 'TEXT' },
+          { name: 'challenges', type: 'TEXT' },
+        ];
+        
+        for (const col of newColumns) {
+          if (!columnNames.includes(col.name)) {
+            try {
+              db.execSync(`ALTER TABLE journals ADD COLUMN ${col.name} ${col.type};`);
+            } catch (err) {
+              console.log(`Error adding column ${col.name}:`, err);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.log('Migration for journals table:', error);
+    }
+
     // Create indexes for better performance
     db.execSync(`CREATE INDEX IF NOT EXISTS idx_bp_readings_measured_at ON bp_readings(measured_at);`);
     db.execSync(`CREATE INDEX IF NOT EXISTS idx_migraine_started_at ON migraine_readings(started_at);`);
@@ -275,8 +396,15 @@ export function initDb() {
     db.execSync(`CREATE INDEX IF NOT EXISTS idx_medication_logs_taken_at ON medication_logs(taken_at);`);
     db.execSync(`CREATE INDEX IF NOT EXISTS idx_supplement_logs_taken_at ON supplement_logs(taken_at);`);
     db.execSync(`CREATE INDEX IF NOT EXISTS idx_journals_entry_date ON journals(entry_date);`);
-    db.execSync(`CREATE INDEX IF NOT EXISTS idx_medications_active ON medications(is_active, start_date);`);
-    db.execSync(`CREATE INDEX IF NOT EXISTS idx_supplements_active ON supplements(is_active, start_date);`);
+    
+    try {
+      db.execSync(`CREATE INDEX IF NOT EXISTS idx_medications_active ON medications(is_active, start_date);`);
+      db.execSync(`CREATE INDEX IF NOT EXISTS idx_supplements_active ON supplements(is_active, start_date);`);
+    } catch (error) {
+      // Indexes might fail if columns don't exist yet, that's okay
+      console.log('Index creation:', error);
+    }
+    
     db.execSync(`CREATE INDEX IF NOT EXISTS idx_dose_schedules_parent ON dose_schedules(parent_type, parent_id);`);
     db.execSync(`CREATE INDEX IF NOT EXISTS idx_tracking_events_parent ON tracking_events(parent_type, parent_id, event_date);`);
     db.execSync(`CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(appointment_date, is_completed);`);
@@ -498,8 +626,23 @@ export function getBPReadings(): Promise<any[]> {
 
 export function saveJournalEntry(entry: {
   mood?: string;
+  mood_intensity?: number | null;
   energy_level?: number | null;
-  note: string;
+  stress_level?: number | null;
+  sleep_quality?: number | null;
+  sleep_hours?: number | null;
+  physical_symptoms?: string;
+  social_activity?: string;
+  exercise_duration?: number | null;
+  exercise_type?: string;
+  nutrition_quality?: number | null;
+  hydration_glasses?: number | null;
+  weather?: string;
+  location?: string;
+  gratitude?: string;
+  goals_achieved?: string;
+  challenges?: string;
+  note?: string;
   tags?: string[];
   entry_date?: number;
 }): Promise<void> {
@@ -510,15 +653,34 @@ export function saveJournalEntry(entry: {
       const entryDate = entry.entry_date || Date.now();
 
       db.runSync(
-        `INSERT INTO journals (id, user_id, entry_date, mood, energy_level, note, tags)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO journals (
+          id, user_id, entry_date, mood, mood_intensity, energy_level, stress_level,
+          sleep_quality, sleep_hours, physical_symptoms, social_activity,
+          exercise_duration, exercise_type, nutrition_quality, hydration_glasses,
+          weather, location, gratitude, goals_achieved, challenges, note, tags
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id,
           userId,
           entryDate,
-          entry.mood || '',
+          entry.mood || null,
+          typeof entry.mood_intensity === 'number' ? entry.mood_intensity : null,
           typeof entry.energy_level === 'number' ? entry.energy_level : null,
-          entry.note,
+          typeof entry.stress_level === 'number' ? entry.stress_level : null,
+          typeof entry.sleep_quality === 'number' ? entry.sleep_quality : null,
+          typeof entry.sleep_hours === 'number' ? entry.sleep_hours : null,
+          entry.physical_symptoms || null,
+          entry.social_activity || null,
+          typeof entry.exercise_duration === 'number' ? entry.exercise_duration : null,
+          entry.exercise_type || null,
+          typeof entry.nutrition_quality === 'number' ? entry.nutrition_quality : null,
+          typeof entry.hydration_glasses === 'number' ? entry.hydration_glasses : null,
+          entry.weather || null,
+          entry.location || null,
+          entry.gratitude || null,
+          entry.goals_achieved || null,
+          entry.challenges || null,
+          entry.note || '',
           entry.tags ? JSON.stringify(entry.tags) : '[]',
         ],
       );
@@ -595,9 +757,10 @@ export function createMedication(med: {
 export function getMedications(activeOnly: boolean = false): Promise<any[]> {
   return new Promise((resolve, reject) => {
     try {
+      // Use COALESCE to handle missing start_date column
       const query = activeOnly
-        ? `SELECT * FROM medications WHERE is_active = 1 ORDER BY start_date DESC`
-        : `SELECT * FROM medications ORDER BY start_date DESC`;
+        ? `SELECT * FROM medications WHERE is_active = 1 ORDER BY COALESCE(start_date, created_at) DESC`
+        : `SELECT * FROM medications ORDER BY COALESCE(start_date, created_at) DESC`;
       const result = db.getAllSync(query);
       resolve(result || []);
     } catch (error) {
@@ -682,9 +845,10 @@ export function createSupplement(supp: {
 export function getSupplements(activeOnly: boolean = false): Promise<any[]> {
   return new Promise((resolve, reject) => {
     try {
+      // Use COALESCE to handle missing start_date column
       const query = activeOnly
-        ? `SELECT * FROM supplements WHERE is_active = 1 ORDER BY start_date DESC`
-        : `SELECT * FROM supplements ORDER BY start_date DESC`;
+        ? `SELECT * FROM supplements WHERE is_active = 1 ORDER BY COALESCE(start_date, created_at) DESC`
+        : `SELECT * FROM supplements ORDER BY COALESCE(start_date, created_at) DESC`;
       const result = db.getAllSync(query);
       resolve(result || []);
     } catch (error) {
@@ -768,9 +932,10 @@ export function createMeditationRoutine(routine: {
 export function getMeditationRoutines(activeOnly: boolean = false): Promise<any[]> {
   return new Promise((resolve, reject) => {
     try {
+      // Use COALESCE to handle missing start_date column
       const query = activeOnly
-        ? `SELECT * FROM meditation_routines WHERE is_active = 1 ORDER BY start_date DESC`
-        : `SELECT * FROM meditation_routines ORDER BY start_date DESC`;
+        ? `SELECT * FROM meditation_routines WHERE is_active = 1 ORDER BY COALESCE(start_date, created_at) DESC`
+        : `SELECT * FROM meditation_routines ORDER BY COALESCE(start_date, created_at) DESC`;
       const result = db.getAllSync(query);
       resolve(result || []);
     } catch (error) {

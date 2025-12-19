@@ -1,24 +1,17 @@
-import BigButton from '@/components/BigButton';
-import { getThemeTokens, tokens } from '@/constants/theme';
-import { getMedicationLogs } from '@/services/db';
+import { getThemeTokens } from '@/constants/theme';
+import { getMedications, getSupplements, getMeditationRoutines } from '@/services/db';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemePreference } from '@/hooks/use-theme-preference';
 
-type MedicationLog = {
-  id: string;
-  medication_name: string;
-  dosage: string;
-  note?: string | null;
-  taken_at: number;
-};
-
-export default function MedsScreen() {
+export default function TrackersScreen() {
   const router = useRouter();
-  const [logs, setLogs] = useState<MedicationLog[]>([]);
+  const [medications, setMedications] = useState<any[]>([]);
+  const [supplements, setSupplements] = useState<any[]>([]);
+  const [routines, setRoutines] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { colorScheme } = useThemePreference();
   const tokens = getThemeTokens(colorScheme);
@@ -28,10 +21,16 @@ export default function MedsScreen() {
       (async () => {
         setIsLoading(true);
         try {
-          const data = await getMedicationLogs();
-          setLogs(data as MedicationLog[]);
+          const [meds, supps, medRoutines] = await Promise.all([
+            getMedications(true),
+            getSupplements(true),
+            getMeditationRoutines(true),
+          ]);
+          setMedications(meds);
+          setSupplements(supps);
+          setRoutines(medRoutines);
         } catch (error) {
-          console.error('Error loading medication logs:', error);
+          console.error('Error loading trackers:', error);
         } finally {
           setIsLoading(false);
         }
@@ -39,72 +38,136 @@ export default function MedsScreen() {
     }, []),
   );
 
-  const renderMedication = ({ item }: { item: MedicationLog }) => (
-    <TouchableOpacity style={styles.medicationCard}>
-      <View style={styles.medicationHeader}>
-        <Text style={styles.medicationName}>{item.medication_name}</Text>
-        <Text style={styles.medicationTime}>
-          {new Date(item.taken_at).toLocaleTimeString([], { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          })}
+  const TrackerCard = ({ title, count, onPress, icon }: { title: string; count: number; onPress: () => void; icon: string }) => (
+    <TouchableOpacity
+      style={[styles.trackerCard, { backgroundColor: tokens.colors.elevatedSurface, borderColor: tokens.colors.border }]}
+      onPress={onPress}
+    >
+      <Text style={[styles.trackerIcon, { color: tokens.colors.primary }]}>{icon}</Text>
+      <View style={styles.trackerInfo}>
+        <Text style={[styles.trackerTitle, { color: tokens.colors.text }]}>{title}</Text>
+        <Text style={[styles.trackerCount, { color: tokens.colors.textMuted }]}>
+          {count} {count === 1 ? 'item' : 'items'}
         </Text>
       </View>
-      <Text style={styles.medicationDosage}>Dosage: {item.dosage}</Text>
-      {item.note ? (
-        <Text style={styles.medicationNote}>{item.note}</Text>
-      ) : null}
-      <Text style={styles.medicationDate}>
-        {new Date(item.taken_at).toLocaleDateString()}
-      </Text>
+      <Text style={[styles.trackerArrow, { color: tokens.colors.textMuted }]}>›</Text>
     </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: tokens.colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: tokens.colors.text }]}>Medications</Text>
-        <Text style={[styles.subtitle, { color: tokens.colors.textMuted }]}>
-          Track your medication intake
-        </Text>
-      </View>
-
-      {isLoading ? (
-        <View style={styles.emptyState}>
-          <Text style={[styles.emptySubtitle, { color: tokens.colors.textMuted }]}>
-            Loading your medication history…
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: tokens.colors.text }]}>Trackers</Text>
+          <Text style={[styles.subtitle, { color: tokens.colors.textMuted }]}>
+            Manage your health tracking
           </Text>
         </View>
-      ) : logs.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Text style={[styles.emptyTitle, { color: tokens.colors.text }]}>
-            No medications logged yet
-          </Text>
-          <Text style={[styles.emptySubtitle, { color: tokens.colors.textMuted }]}>
-            Start tracking your medications to maintain a complete health record.
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={logs}
-          renderItem={renderMedication}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
 
-      <Text style={[styles.disclaimer, { color: tokens.colors.textMuted }]}>
-        This app is for tracking only and does not replace professional medical advice. Always take
-        medications as prescribed.
-      </Text>
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={tokens.colors.primary} />
+          </View>
+        ) : (
+          <>
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: tokens.colors.text }]}>Medications</Text>
+              {medications.length > 0 ? (
+                medications.map((med) => (
+                  <TouchableOpacity
+                    key={med.id}
+                    style={[styles.itemCard, { backgroundColor: tokens.colors.elevatedSurface, borderColor: tokens.colors.border }]}
+                    onPress={() => router.push(`/med-tracker?id=${med.id}`)}
+                  >
+                    <Text style={[styles.itemName, { color: tokens.colors.text }]}>{med.name}</Text>
+                    <Text style={[styles.itemDosage, { color: tokens.colors.textMuted }]}>{med.dosage}</Text>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <Text style={[styles.emptyText, { color: tokens.colors.textMuted }]}>
+                  No medications added yet
+                </Text>
+              )}
+              <TouchableOpacity
+                style={[styles.addButton, { backgroundColor: tokens.colors.primary }]}
+                onPress={() => router.push('/add-medication')}
+              >
+                <Text style={[styles.addButtonText, { color: '#FFFFFF' }]}>+ Add Medication</Text>
+              </TouchableOpacity>
+            </View>
 
-      <View style={styles.footer}>
-        <BigButton 
-          title="Add Medication" 
-          onPress={() => router.push('/add-medication')} 
-        />
-      </View>
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: tokens.colors.text }]}>Supplements</Text>
+              {supplements.length > 0 ? (
+                supplements.map((supp) => (
+                  <TouchableOpacity
+                    key={supp.id}
+                    style={[styles.itemCard, { backgroundColor: tokens.colors.elevatedSurface, borderColor: tokens.colors.border }]}
+                    onPress={() => router.push(`/supplement-tracker?id=${supp.id}`)}
+                  >
+                    <Text style={[styles.itemName, { color: tokens.colors.text }]}>{supp.name}</Text>
+                    <Text style={[styles.itemDosage, { color: tokens.colors.textMuted }]}>{supp.dosage}</Text>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <Text style={[styles.emptyText, { color: tokens.colors.textMuted }]}>
+                  No supplements added yet
+                </Text>
+              )}
+              <TouchableOpacity
+                style={[styles.addButton, { backgroundColor: tokens.colors.primary }]}
+                onPress={() => router.push('/add-supplement')}
+              >
+                <Text style={[styles.addButtonText, { color: '#FFFFFF' }]}>+ Add Supplement</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: tokens.colors.text }]}>Meditation</Text>
+              {routines.length > 0 ? (
+                routines.map((routine) => (
+                  <TouchableOpacity
+                    key={routine.id}
+                    style={[styles.itemCard, { backgroundColor: tokens.colors.elevatedSurface, borderColor: tokens.colors.border }]}
+                    onPress={() => router.push(`/meditation-tracker?id=${routine.id}`)}
+                  >
+                    <Text style={[styles.itemName, { color: tokens.colors.text }]}>{routine.name}</Text>
+                    <Text style={[styles.itemDosage, { color: tokens.colors.textMuted }]}>
+                      Target: {routine.target_minutes} min/day
+                    </Text>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <Text style={[styles.emptyText, { color: tokens.colors.textMuted }]}>
+                  No meditation routines added yet
+                </Text>
+              )}
+              <TouchableOpacity
+                style={[styles.addButton, { backgroundColor: tokens.colors.primary }]}
+                onPress={() => router.push('/add-meditation')}
+              >
+                <Text style={[styles.addButtonText, { color: '#FFFFFF' }]}>+ Add Routine</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: tokens.colors.text }]}>Other Trackers</Text>
+              <TrackerCard
+                title="Migraines"
+                count={0}
+                icon="⚡"
+                onPress={() => router.push('/migraine-tracker')}
+              />
+              <TrackerCard
+                title="Appointments"
+                count={0}
+                icon="📅"
+                onPress={() => router.push('/appointment-tracker')}
+              />
+            </View>
+          </>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -112,92 +175,89 @@ export default function MedsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: tokens.colors.bg,
+  },
+  content: {
+    padding: 24,
+    paddingBottom: 32,
   },
   header: {
-    padding: tokens.spacing.lg,
-    paddingBottom: tokens.spacing.md,
+    marginBottom: 24,
   },
   title: {
-    fontSize: tokens.typography.h1,
+    fontSize: 28,
     fontWeight: '700',
-    color: tokens.colors.text,
-    marginBottom: tokens.spacing.xs,
+    marginBottom: 4,
   },
   subtitle: {
-    fontSize: tokens.typography.body,
-    color: tokens.colors.textMuted,
+    fontSize: 16,
   },
-  listContent: {
-    padding: tokens.spacing.lg,
-    paddingTop: 0,
-  },
-  medicationCard: {
-    backgroundColor: tokens.colors.card,
-    borderRadius: tokens.borderRadius.md,
-    padding: tokens.spacing.md,
-    marginBottom: tokens.spacing.md,
-    ...tokens.shadows.sm,
-  },
-  medicationHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  loadingContainer: {
+    paddingVertical: 48,
     alignItems: 'center',
-    marginBottom: tokens.spacing.sm,
   },
-  medicationName: {
-    fontSize: tokens.typography.h2,
+  section: {
+    marginBottom: 32,
+  },
+  sectionTitle: {
+    fontSize: 20,
     fontWeight: '600',
-    color: tokens.colors.text,
-    flex: 1,
+    marginBottom: 16,
   },
-  medicationTime: {
-    fontSize: tokens.typography.body,
-    color: tokens.colors.primary,
-    fontWeight: '500',
+  itemCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
   },
-  medicationDosage: {
-    fontSize: tokens.typography.body,
-    color: tokens.colors.textMuted,
-    marginBottom: tokens.spacing.xs,
+  itemName: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 4,
   },
-  medicationNote: {
-    fontSize: tokens.typography.body,
-    color: tokens.colors.text,
+  itemDosage: {
+    fontSize: 14,
+  },
+  emptyText: {
+    fontSize: 14,
+    marginBottom: 12,
     fontStyle: 'italic',
-    marginBottom: tokens.spacing.xs,
   },
-  medicationDate: {
-    fontSize: tokens.typography.small,
-    color: tokens.colors.textMuted,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
+  addButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
     alignItems: 'center',
-    padding: tokens.spacing.xl,
+    marginTop: 8,
   },
-  emptyTitle: {
-    fontSize: tokens.typography.h2,
+  addButtonText: {
+    fontSize: 16,
     fontWeight: '600',
-    color: tokens.colors.text,
-    marginBottom: tokens.spacing.sm,
-    textAlign: 'center',
   },
-  emptySubtitle: {
-    fontSize: tokens.typography.body,
-    color: tokens.colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 22,
+  trackerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
   },
-  disclaimer: {
-    paddingHorizontal: tokens.spacing.lg,
-    fontSize: tokens.typography.caption,
-    color: tokens.colors.textMuted,
-    textAlign: 'center',
+  trackerIcon: {
+    fontSize: 24,
+    marginRight: 16,
   },
-  footer: {
-    padding: tokens.spacing.lg,
-    paddingTop: tokens.spacing.md,
+  trackerInfo: {
+    flex: 1,
+  },
+  trackerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  trackerCount: {
+    fontSize: 14,
+  },
+  trackerArrow: {
+    fontSize: 24,
+    fontWeight: '300',
   },
 });

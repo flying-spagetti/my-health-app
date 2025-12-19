@@ -1,13 +1,13 @@
 import BigButton from '@/components/BigButton';
-import { getThemeTokens } from '@/constants/theme';
+import { getThemeTokens, tokens } from '@/constants/theme';
 import { createAppointment } from '@/services/db';
+import { rescheduleAllReminders } from '@/services/reminders';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function AddAppointmentScreen() {
   const router = useRouter();
-  const tokens = getThemeTokens('dark');
   const [doctorName, setDoctorName] = useState('');
   const [specialty, setSpecialty] = useState('');
   const [location, setLocation] = useState('');
@@ -53,6 +53,9 @@ export default function AddAppointmentScreen() {
         appointment_type: appointmentType,
         notes: notes.trim() || undefined,
       });
+      
+      // Reschedule reminders
+      await rescheduleAllReminders();
       
       Alert.alert('Success', 'Appointment added successfully!', [
         { text: 'OK', onPress: () => router.back() }

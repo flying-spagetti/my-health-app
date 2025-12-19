@@ -7,6 +7,10 @@ import {
   getDoseSchedulesByParent,
   getTrackingEventsByParent,
   getTrackingEventsByDate,
+  getMedicationById,
+  getSupplementById,
+  getMeditationRoutineById,
+  getMeditationLogs,
 } from './db';
 
 export type DueItem = {
@@ -211,19 +215,15 @@ export async function getTrackingStats(
   parentId: string,
   scheduleId?: string
 ): Promise<TrackingStats> {
-  const parent = await (async () => {
-    if (parentType === 'medication') {
-      const { getMedicationById } = await import('./db');
-      return await getMedicationById(parentId);
-    } else if (parentType === 'supplement') {
-      const { getSupplementById } = await import('./db');
-      return await getSupplementById(parentId);
-    } else if (parentType === 'meditation') {
-      const { getMeditationRoutineById } = await import('./db');
-      return await getMeditationRoutineById(parentId);
-    }
-    return null;
-  })();
+  let parent: any = null;
+  
+  if (parentType === 'medication') {
+    parent = await getMedicationById(parentId);
+  } else if (parentType === 'supplement') {
+    parent = await getSupplementById(parentId);
+  } else if (parentType === 'meditation') {
+    parent = await getMeditationRoutineById(parentId);
+  }
   
   if (!parent) {
     return {
@@ -235,9 +235,9 @@ export async function getTrackingStats(
     };
   }
   
-  const startDate = parent.start_date || parent.created_at;
+  const startDate = parent?.start_date || parent?.created_at || Date.now();
   const now = Date.now();
-  const daysSinceStarted = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+  const daysSinceStarted = Math.max(0, Math.floor((now - startDate) / (1000 * 60 * 60 * 24)));
   
   // Get all tracking events
   const allEvents = await getTrackingEventsByParent(parentType, parentId);
@@ -342,7 +342,6 @@ export async function getMeditationMinutesHistory(
   routineId: string,
   days: number = 30
 ): Promise<Array<{ date: number; minutes: number }>> {
-  const { getMeditationLogs } = await import('./db');
   const allSessions = await getMeditationLogs();
   const routineSessions = allSessions.filter(s => s.routine_id === routineId);
   

@@ -1,6 +1,7 @@
 import BigButton from '@/components/BigButton';
 import { tokens } from '@/constants/theme';
 import { createMedication, createDoseSchedule } from '@/services/db';
+import { rescheduleAllReminders } from '@/services/reminders';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -86,6 +87,9 @@ export default function AddMedicationScreen() {
           dosage: schedule.dosage || dosage.trim(),
         });
       }
+      
+      // Reschedule reminders
+      await rescheduleAllReminders();
       
       Alert.alert('Success', 'Medication added! We\'ll remind you when it\'s due.', [
         { text: 'OK', onPress: () => router.push('/(tabs)') }
