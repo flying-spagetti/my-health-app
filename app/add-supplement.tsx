@@ -1,15 +1,34 @@
+/**
+ * Add Supplement Screen
+ * 
+ * Form to add a new supplement with scheduling options.
+ */
+
 import BigButton from '@/components/BigButton';
-import { tokens } from '@/constants/theme';
+import { getThemeTokens, spacing, borderRadius, shadows } from '@/constants/theme';
+import { useThemePreference } from '@/hooks/use-theme-preference';
 import { createSupplement, createDoseSchedule } from '@/services/db';
 import { rescheduleAllReminders } from '@/services/reminders';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { 
+  Alert, 
+  ScrollView, 
+  StyleSheet, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  View 
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function AddSupplementScreen() {
   const router = useRouter();
+  const { colorScheme } = useThemePreference();
+  const tokens = getThemeTokens(colorScheme);
+  
   const [supplementName, setSupplementName] = useState('');
   const [dosage, setDosage] = useState('');
   const [notes, setNotes] = useState('');
@@ -86,11 +105,11 @@ export default function AddSupplementScreen() {
         });
       }
       
-      // Reschedule reminders
-      await rescheduleAllReminders();
+      // Reschedule reminders (force reschedule since we added a new item)
+      await rescheduleAllReminders(true);
       
       Alert.alert('Success', 'Supplement added! We\'ll remind you when it\'s due.', [
-        { text: 'OK', onPress: () => router.push('/(tabs)') }
+        { text: 'OK', onPress: () => router.back() }
       ]);
     } catch (error) {
       Alert.alert('Error', 'Failed to save supplement. Please try again.');
@@ -101,73 +120,139 @@ export default function AddSupplementScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
+    <SafeAreaView 
+      style={[styles.container, { backgroundColor: tokens.colors.background }]}
+      edges={['bottom']}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.header}>
-          <Text style={styles.title}>Add Supplement</Text>
-          <Text style={styles.subtitle}>Set up supplement tracking with schedules</Text>
+          <Text style={[styles.title, { color: tokens.colors.textHandwritten }]}>
+            Add Supplement
+          </Text>
+          <Text style={[styles.subtitle, { color: tokens.colors.textMuted }]}>
+            Set up supplement tracking with schedules
+          </Text>
         </View>
 
         <View style={styles.form}>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Supplement Name *</Text>
+            <Text style={[styles.label, { color: tokens.colors.text }]}>
+              Supplement Name *
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input, 
+                { 
+                  backgroundColor: tokens.colors.card,
+                  color: tokens.colors.text,
+                  borderColor: tokens.colors.border,
+                }
+              ]}
               value={supplementName}
               onChangeText={setSupplementName}
               placeholder="e.g., Vitamin D, Omega-3, Magnesium"
+              placeholderTextColor={tokens.colors.textMuted}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Dosage *</Text>
+            <Text style={[styles.label, { color: tokens.colors.text }]}>
+              Dosage *
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input, 
+                { 
+                  backgroundColor: tokens.colors.card,
+                  color: tokens.colors.text,
+                  borderColor: tokens.colors.border,
+                }
+              ]}
               value={dosage}
               onChangeText={setDosage}
               placeholder="e.g., 1000mg, 2 capsules, 1 tablet"
+              placeholderTextColor={tokens.colors.textMuted}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Schedules *</Text>
+            <Text style={[styles.label, { color: tokens.colors.text }]}>
+              Schedules *
+            </Text>
             {schedules.map((schedule, index) => (
-              <View key={index} style={styles.scheduleCard}>
+              <View 
+                key={index} 
+                style={[
+                  styles.scheduleCard, 
+                  { 
+                    backgroundColor: tokens.colors.surface,
+                    borderColor: tokens.colors.border,
+                  }
+                ]}
+              >
                 <View style={styles.scheduleHeader}>
-                  <Text style={styles.scheduleLabel}>Schedule {index + 1}</Text>
+                  <Text style={[styles.scheduleLabel, { color: tokens.colors.text }]}>
+                    Schedule {index + 1}
+                  </Text>
                   {schedules.length > 1 && (
                     <TouchableOpacity onPress={() => removeSchedule(index)}>
-                      <Text style={styles.removeButton}>Remove</Text>
+                      <Text style={[styles.removeButton, { color: tokens.colors.danger }]}>
+                        Remove
+                      </Text>
                     </TouchableOpacity>
                   )}
                 </View>
                 
                 <View style={styles.timeRow}>
-                  <Text style={styles.timeLabel}>Time:</Text>
+                  <Text style={[styles.timeLabel, { color: tokens.colors.text }]}>
+                    Time:
+                  </Text>
                   <TextInput
-                    style={[styles.input, styles.timeInput]}
+                    style={[
+                      styles.input, 
+                      styles.timeInput,
+                      { 
+                        backgroundColor: tokens.colors.card,
+                        color: tokens.colors.text,
+                        borderColor: tokens.colors.border,
+                      }
+                    ]}
                     value={schedule.time}
                     onChangeText={(time) => updateSchedule(index, { time })}
                     placeholder="08:00"
+                    placeholderTextColor={tokens.colors.textMuted}
                     keyboardType="numeric"
                   />
                 </View>
 
                 <View style={styles.daysContainer}>
-                  <Text style={styles.daysLabel}>Days:</Text>
+                  <Text style={[styles.daysLabel, { color: tokens.colors.text }]}>
+                    Days:
+                  </Text>
                   <View style={styles.daysRow}>
                     {DAYS_OF_WEEK.map((day, dayIndex) => (
                       <TouchableOpacity
                         key={dayIndex}
                         style={[
                           styles.dayButton,
-                          schedule.days.includes(dayIndex) && styles.dayButtonSelected
+                          { 
+                            borderColor: tokens.colors.border,
+                            backgroundColor: tokens.colors.card,
+                          },
+                          schedule.days.includes(dayIndex) && { 
+                            backgroundColor: tokens.colors.primary,
+                            borderColor: tokens.colors.primary,
+                          }
                         ]}
                         onPress={() => toggleDay(index, dayIndex)}
                       >
                         <Text style={[
                           styles.dayButtonText,
-                          schedule.days.includes(dayIndex) && styles.dayButtonTextSelected
+                          { color: tokens.colors.text },
+                          schedule.days.includes(dayIndex) && { color: '#FFFFFF' }
                         ]}>
                           {day}
                         </Text>
@@ -178,18 +263,34 @@ export default function AddSupplementScreen() {
               </View>
             ))}
             
-            <TouchableOpacity style={styles.addScheduleButton} onPress={addSchedule}>
-              <Text style={styles.addScheduleText}>+ Add Another Schedule</Text>
+            <TouchableOpacity 
+              style={[styles.addScheduleButton, { borderColor: tokens.colors.border }]} 
+              onPress={addSchedule}
+            >
+              <Text style={[styles.addScheduleText, { color: tokens.colors.primary }]}>
+                + Add Another Schedule
+              </Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Notes</Text>
+            <Text style={[styles.label, { color: tokens.colors.text }]}>
+              Notes
+            </Text>
             <TextInput
-              style={[styles.input, styles.textArea]}
+              style={[
+                styles.input, 
+                styles.textArea,
+                { 
+                  backgroundColor: tokens.colors.card,
+                  color: tokens.colors.text,
+                  borderColor: tokens.colors.border,
+                }
+              ]}
               value={notes}
               onChangeText={setNotes}
               placeholder="Any additional notes..."
+              placeholderTextColor={tokens.colors.textMuted}
               multiline
               numberOfLines={3}
               textAlignVertical="top"
@@ -197,7 +298,7 @@ export default function AddSupplementScreen() {
           </View>
         </View>
 
-        <Text style={styles.disclaimer}>
+        <Text style={[styles.disclaimer, { color: tokens.colors.textMuted }]}>
           This app is for tracking only and does not provide medical advice. Talk to your doctor
           before starting or changing supplements.
         </Text>
@@ -207,6 +308,7 @@ export default function AddSupplementScreen() {
             title={isLoading ? "Saving..." : "Save Supplement"} 
             onPress={handleSave}
             disabled={isLoading}
+            loading={isLoading}
           />
         </View>
       </ScrollView>
@@ -217,141 +319,121 @@ export default function AddSupplementScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: tokens.colors.bg,
   },
   content: {
     flexGrow: 1,
-    padding: tokens.spacing.lg,
+    padding: spacing.lg,
   },
   header: {
-    marginBottom: tokens.spacing.xl,
+    marginBottom: spacing.xl,
   },
   title: {
-    fontSize: tokens.typography.h1,
-    fontWeight: '700',
-    color: tokens.colors.text,
-    marginBottom: tokens.spacing.xs,
+    fontSize: 28,
+    fontFamily: 'Caveat-SemiBold',
+    marginBottom: spacing.xxs,
   },
   subtitle: {
-    fontSize: tokens.typography.body,
-    color: tokens.colors.textMuted,
+    fontSize: 14,
+    fontFamily: 'Nunito-Regular',
   },
   form: {
     flex: 1,
   },
   inputGroup: {
-    marginBottom: tokens.spacing.lg,
+    marginBottom: spacing.lg,
   },
   label: {
-    fontSize: tokens.typography.body,
-    fontWeight: '500',
-    color: tokens.colors.text,
-    marginBottom: tokens.spacing.sm,
+    fontSize: 15,
+    fontFamily: 'Nunito-SemiBold',
+    marginBottom: spacing.sm,
   },
   input: {
-    backgroundColor: tokens.colors.card,
-    borderRadius: tokens.borderRadius.md,
-    padding: tokens.spacing.md,
-    fontSize: tokens.typography.body,
-    color: tokens.colors.text,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    fontSize: 16,
+    fontFamily: 'Nunito-Regular',
     borderWidth: 1,
-    borderColor: tokens.colors.border,
   },
   textArea: {
     height: 80,
   },
   scheduleCard: {
-    backgroundColor: tokens.colors.surface,
-    borderRadius: tokens.borderRadius.md,
-    padding: tokens.spacing.md,
-    marginBottom: tokens.spacing.md,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: tokens.colors.border,
   },
   scheduleHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: tokens.spacing.md,
+    marginBottom: spacing.md,
   },
   scheduleLabel: {
-    fontSize: tokens.typography.body,
-    fontWeight: '600',
-    color: tokens.colors.text,
+    fontSize: 15,
+    fontFamily: 'Nunito-SemiBold',
   },
   removeButton: {
-    fontSize: tokens.typography.caption,
-    color: tokens.colors.danger,
-    fontWeight: '600',
+    fontSize: 13,
+    fontFamily: 'Nunito-SemiBold',
   },
   timeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: tokens.spacing.md,
+    marginBottom: spacing.md,
   },
   timeLabel: {
-    fontSize: tokens.typography.body,
-    color: tokens.colors.text,
-    marginRight: tokens.spacing.sm,
+    fontSize: 15,
+    fontFamily: 'Nunito-Regular',
+    marginRight: spacing.sm,
   },
   timeInput: {
     flex: 1,
     maxWidth: 100,
   },
   daysContainer: {
-    marginTop: tokens.spacing.sm,
+    marginTop: spacing.sm,
   },
   daysLabel: {
-    fontSize: tokens.typography.body,
-    color: tokens.colors.text,
-    marginBottom: tokens.spacing.sm,
+    fontSize: 15,
+    fontFamily: 'Nunito-Regular',
+    marginBottom: spacing.sm,
   },
   daysRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: tokens.spacing.xs,
+    gap: spacing.xs,
   },
   dayButton: {
-    paddingVertical: tokens.spacing.xs,
-    paddingHorizontal: tokens.spacing.sm,
-    borderRadius: tokens.borderRadius.sm,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: tokens.colors.border,
-    backgroundColor: tokens.colors.card,
-    minWidth: 40,
+    minWidth: 44,
     alignItems: 'center',
-  },
-  dayButtonSelected: {
-    backgroundColor: tokens.colors.primary,
-    borderColor: tokens.colors.primary,
   },
   dayButtonText: {
-    fontSize: tokens.typography.caption,
-    color: tokens.colors.text,
-    fontWeight: '600',
-  },
-  dayButtonTextSelected: {
-    color: tokens.colors.bg,
+    fontSize: 13,
+    fontFamily: 'Nunito-SemiBold',
   },
   addScheduleButton: {
-    paddingVertical: tokens.spacing.md,
+    paddingVertical: spacing.md,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: tokens.colors.border,
     borderStyle: 'dashed',
-    borderRadius: tokens.borderRadius.md,
+    borderRadius: borderRadius.lg,
   },
   addScheduleText: {
-    fontSize: tokens.typography.body,
-    color: tokens.colors.primary,
-    fontWeight: '600',
+    fontSize: 15,
+    fontFamily: 'Nunito-SemiBold',
   },
   footer: {
-    paddingTop: tokens.spacing.lg,
+    paddingTop: spacing.lg,
   },
   disclaimer: {
-    marginTop: tokens.spacing.md,
-    fontSize: tokens.typography.caption,
-    color: tokens.colors.textMuted,
+    marginTop: spacing.md,
+    fontSize: 12,
+    fontFamily: 'Nunito-Regular',
+    textAlign: 'center',
   },
 });

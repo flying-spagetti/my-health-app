@@ -1,38 +1,44 @@
 /**
- * Profile Tab - Settings and User Information
+ * Profile Tab - User Profile and Settings
  * 
  * Features:
+ * - Hero profile section with avatar and key stats
+ * - Streak and achievements
+ * - Health journey overview
  * - Theme preferences
  * - Data & Privacy settings
- * - Health stats overview
- * - App info
  */
 
-import React, { useState, useEffect } from 'react';
-import { 
-  Alert, 
-  ScrollView, 
-  StyleSheet, 
-  Text, 
-  TouchableOpacity, 
-  View 
+import { useFocusEffect } from '@react-navigation/native';
+import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 
-import { useThemePreference } from '@/hooks/use-theme-preference';
-import { 
-  getThemeTokens, 
-  getScreenBackground,
-  spacing,
-  borderRadius,
-  shadows,
-} from '@/constants/theme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { 
-  getBPReadings, 
-  getMedications, 
+import {
+  borderRadius,
+  getScreenBackground,
+  getThemeTokens,
+  shadows,
+  spacing,
+} from '@/constants/theme';
+import { useThemePreference } from '@/hooks/use-theme-preference';
+import {
+  getBPReadings,
   getJournalEntries,
+  getMedications,
+  getMeditationLogs,
+  getSupplements,
+  getWorkouts,
 } from '@/services/db';
 
 export default function ProfileScreen() {
@@ -44,33 +50,101 @@ export default function ProfileScreen() {
   const [stats, setStats] = useState({
     bpReadings: 0,
     medications: 0,
+    supplements: 0,
     journalEntries: 0,
+    meditationMinutes: 0,
+    workouts: 0,
     daysTracked: 0,
+    currentStreak: 0,
+    longestStreak: 0,
   });
 
-  useEffect(() => {
-    loadStats();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadStats();
+    }, [])
+  );
 
   const loadStats = async () => {
     try {
-      const [bp, meds, journals] = await Promise.all([
+      const [bp, meds, supps, journals, meditations, workouts] = await Promise.all([
         getBPReadings(),
         getMedications(),
+        getSupplements(),
         getJournalEntries(),
+        getMeditationLogs(),
+        getWorkouts(),
       ]);
       
-      // Calculate days tracked (unique days with any entry)
+      // Calculate total meditation minutes
+      const totalMeditationMinutes = meditations.reduce((sum: number, s: any) => sum + (s.duration_minutes || 0), 0);
+      
+      // Calculate days tracked and streaks (unique days with any journal entry)
       const allDates = new Set<string>();
+      const sortedDates: string[] = [];
+      
       journals.forEach((j: any) => {
-        allDates.add(new Date(j.entry_date).toDateString());
+        const dateStr = new Date(j.entry_date).toDateString();
+        if (!allDates.has(dateStr)) {
+          allDates.add(dateStr);
+          sortedDates.push(dateStr);
+        }
       });
+      
+      // Calculate current streak
+      let currentStreak = 0;
+      let longestStreak = 0;
+      let tempStreak = 0;
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Check if there's an entry today or yesterday
+      const todayStr = today.toDateString();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toDateString();
+      
+      if (allDates.has(todayStr) || allDates.has(yesterdayStr)) {
+        // Count streak backwards from today
+        let checkDate = allDates.has(todayStr) ? new Date(today) : new Date(yesterday);
+        
+        while (allDates.has(checkDate.toDateString())) {
+          currentStreak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        }
+      }
+      
+      // Calculate longest streak
+      sortedDates.sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+      
+      for (let i = 0; i < sortedDates.length; i++) {
+        if (i === 0) {
+          tempStreak = 1;
+        } else {
+          const prevDate = new Date(sortedDates[i - 1]);
+          const currDate = new Date(sortedDates[i]);
+          const diffDays = Math.floor((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (diffDays === 1) {
+            tempStreak++;
+          } else {
+            tempStreak = 1;
+          }
+        }
+        longestStreak = Math.max(longestStreak, tempStreak);
+      }
       
       setStats({
         bpReadings: bp.length,
         medications: meds.length,
+        supplements: supps.length,
         journalEntries: journals.length,
+        meditationMinutes: totalMeditationMinutes,
+        workouts: workouts.length,
         daysTracked: allDates.size,
+        currentStreak,
+        longestStreak,
       });
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -80,29 +154,61 @@ export default function ProfileScreen() {
   const handleExportData = () => {
     Alert.alert(
       'Coming Soon',
-      'Data export (CSV/JSON) will be available in a future version.',
+      'Data export (CSV/JSON) inka cheyaledhu kada ra.',
     );
   };
 
   const handleBiometricSettings = () => {
     Alert.alert(
       'Coming Soon',
-      'Biometric lock will let you secure the app with Face ID or fingerprint in a future update.',
+      'Biometric lock inka cheyaledhu kada ra.',
     );
   };
 
   const handleAbout = () => {
     Alert.alert(
       'About',
-      'Version 1.0.0\nBuilt with care for your health journey.\n\nThis app is not a medical device and does not provide medical advice.',
+      'Version 1.0.1\nEe version lo only kontha functionality ae chesam ga',
     );
   };
 
   const themeOptions = [
-    { id: 'system', label: 'System' },
-    { id: 'light', label: 'Light' },
-    { id: 'dark', label: 'Dark' },
+    { id: 'system', label: 'System', icon: 'gearshape' },
+    { id: 'light', label: 'Light', icon: 'sun.max' },
+    { id: 'dark', label: 'Dark', icon: 'moon.fill' },
   ] as const;
+
+  // Health journey stats for display
+  const journeyStats = [
+    { 
+      id: 'journal', 
+      icon: 'book.fill', 
+      value: stats.journalEntries, 
+      label: 'Journal Entries',
+      color: tokens.colors.accent,
+    },
+    { 
+      id: 'meditation', 
+      icon: 'leaf.fill', 
+      value: stats.meditationMinutes, 
+      label: 'Meditation Mins',
+      color: tokens.colors.teal,
+    },
+    { 
+      id: 'bp', 
+      icon: 'heart.fill', 
+      value: stats.bpReadings, 
+      label: 'BP Readings',
+      color: tokens.colors.coral,
+    },
+    { 
+      id: 'workouts', 
+      icon: 'figure.walk', 
+      value: stats.workouts, 
+      label: 'Workouts',
+      color: tokens.colors.primary,
+    },
+  ];
 
   return (
     <SafeAreaView 
@@ -113,28 +219,138 @@ export default function ProfileScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: tokens.colors.textHandwritten }]}>
-            Profile
-          </Text>
-          <Text style={[styles.subtitle, { color: tokens.colors.textSecondary }]}>
-            Manage your settings
-          </Text>
+        {/* Hero Profile Section */}
+        <View style={[styles.heroCard, { backgroundColor: tokens.colors.card }, shadows.medium]}>
+          {/* Profile Header */}
+          <View style={styles.profileHeader}>
+            <View style={[styles.avatarContainer, { borderColor: tokens.colors.primary }]}>
+              {/* Profile image - using expo-image for better performance */}
+              <Image 
+                source={require('@/assets/images/profile-image.jpg')} 
+                style={styles.avatarImage}
+                contentFit="cover"
+                transition={200}
+              />
+              {/* Online indicator */}
+              <View style={[styles.onlineIndicator, { backgroundColor: tokens.colors.success }]} />
+            </View>
+            
+            <View style={styles.profileInfo}>
+              <Text style={[styles.profileName, { color: tokens.colors.text }]}>
+                Gnaneswar
+              </Text>
+              <Text style={[styles.profileTagline, { color: tokens.colors.textMuted }]}>
+                Trying to be a good human, one day at a time.
+              </Text>
+              <View style={styles.memberSince}>
+                <IconSymbol name="calendar" size={12} color={tokens.colors.textMuted} />
+                <Text style={[styles.memberSinceText, { color: tokens.colors.textMuted }]}>
+                  Member since Jan 2026
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Streak Banner */}
+          <View style={[styles.streakBanner, { backgroundColor: tokens.colors.primary + '15' }]}>
+            <View style={styles.streakItem}>
+              <Text style={[styles.streakEmoji]}>🔥</Text>
+              <View>
+                <Text style={[styles.streakValue, { color: tokens.colors.primary }]}>
+                  {stats.currentStreak}
+                </Text>
+                <Text style={[styles.streakLabel, { color: tokens.colors.textMuted }]}>
+                  Day Streak
+                </Text>
+              </View>
+            </View>
+            
+            <View style={[styles.streakDivider, { backgroundColor: tokens.colors.border }]} />
+            
+            <View style={styles.streakItem}>
+              <Text style={[styles.streakEmoji]}>🏆</Text>
+              <View>
+                <Text style={[styles.streakValue, { color: tokens.colors.accent }]}>
+                  {stats.longestStreak}
+                </Text>
+                <Text style={[styles.streakLabel, { color: tokens.colors.textMuted }]}>
+                  Best Streak
+                </Text>
+              </View>
+            </View>
+            
+            <View style={[styles.streakDivider, { backgroundColor: tokens.colors.border }]} />
+            
+            <View style={styles.streakItem}>
+              <Text style={[styles.streakEmoji]}>🌟</Text>
+              <View>
+                <Text style={[styles.streakValue, { color: tokens.colors.teal }]}>
+                  {stats.daysTracked}
+                </Text>
+                <Text style={[styles.streakLabel, { color: tokens.colors.textMuted }]}>
+                  Days Active
+                </Text>
+              </View>
+            </View>
+          </View>
         </View>
 
-        {/* User Card */}
-        <View style={[styles.userCard, { backgroundColor: tokens.colors.card }, shadows.low]}>
-          <View style={[styles.userAvatar, { backgroundColor: tokens.colors.primary }]}>
-            <IconSymbol name="person.fill" size={32} color="#FFFFFF" />
+        {/* Health Journey Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: tokens.colors.textHandwritten }]}>
+            Your Health Journey
+          </Text>
+          
+          <View style={styles.journeyGrid}>
+            {journeyStats.map((stat) => (
+              <View 
+                key={stat.id}
+                style={[styles.journeyCard, { backgroundColor: tokens.colors.card }, shadows.subtle]}
+              >
+                <View style={[styles.journeyIconContainer, { backgroundColor: stat.color + '20' }]}>
+                  <IconSymbol name={stat.icon as any} size={20} color={stat.color} />
+                </View>
+                <Text style={[styles.journeyValue, { color: tokens.colors.text }]}>
+                  {stat.value}
+                </Text>
+                <Text style={[styles.journeyLabel, { color: tokens.colors.textMuted }]}>
+                  {stat.label}
+                </Text>
+              </View>
+            ))}
           </View>
-          <View style={styles.userInfo}>
-            <Text style={[styles.userName, { color: tokens.colors.text }]}>
-              User
-            </Text>
-            <Text style={[styles.userEmail, { color: tokens.colors.textMuted }]}>
-              Your health journey
-            </Text>
+        </View>
+
+        {/* Active Tracking Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: tokens.colors.textHandwritten }]}>
+            Active Tracking
+          </Text>
+          
+          <View style={[styles.trackingCard, { backgroundColor: tokens.colors.card }, shadows.subtle]}>
+            <View style={styles.trackingRow}>
+              <View style={styles.trackingItem}>
+                <IconSymbol name="pills.fill" size={18} color={tokens.colors.primary} />
+                <Text style={[styles.trackingValue, { color: tokens.colors.text }]}>
+                  {stats.medications}
+                </Text>
+                <Text style={[styles.trackingLabel, { color: tokens.colors.textMuted }]}>
+                  Medications
+                </Text>
+              </View>
+              
+              <View style={[styles.trackingDivider, { backgroundColor: tokens.colors.border }]} />
+              
+              <View style={styles.trackingItem}>
+                <IconSymbol name="leaf.fill" size={18} color={tokens.colors.teal} />
+                <Text style={[styles.trackingValue, { color: tokens.colors.text }]}>
+                  {stats.supplements}
+                </Text>
+                <Text style={[styles.trackingLabel, { color: tokens.colors.textMuted }]}>
+                  Supplements
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
 
@@ -143,148 +359,114 @@ export default function ProfileScreen() {
           <Text style={[styles.sectionTitle, { color: tokens.colors.textHandwritten }]}>
             Appearance
           </Text>
-          <View style={styles.themeOptions}>
-            {themeOptions.map((option) => (
-              <TouchableOpacity
-                key={option.id}
-                style={[
-                  styles.themeChip,
-                  { borderColor: tokens.colors.border },
-                  preference === option.id && { 
-                    backgroundColor: tokens.colors.primary,
-                    borderColor: tokens.colors.primary,
-                  },
-                ]}
-                onPress={() => setPreference(option.id)}
-              >
-                <Text
+          
+          <View style={[styles.themeCard, { backgroundColor: tokens.colors.card }, shadows.subtle]}>
+            <View style={styles.themeOptions}>
+              {themeOptions.map((option) => (
+                <TouchableOpacity
+                  key={option.id}
                   style={[
-                    styles.themeChipText,
-                    { color: tokens.colors.textMuted },
-                    preference === option.id && { color: '#FFFFFF' },
+                    styles.themeOption,
+                    { borderColor: tokens.colors.border },
+                    preference === option.id && { 
+                      backgroundColor: tokens.colors.primary,
+                      borderColor: tokens.colors.primary,
+                    },
                   ]}
+                  onPress={() => setPreference(option.id)}
+                  activeOpacity={0.7}
                 >
-                  {option.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Stats Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: tokens.colors.textHandwritten }]}>
-            Your Stats
-          </Text>
-          <View style={styles.statsGrid}>
-            <View style={[styles.statCard, { backgroundColor: tokens.colors.card }, shadows.subtle]}>
-              <Text style={[styles.statNumber, { color: tokens.colors.primary }]}>
-                {stats.bpReadings}
-              </Text>
-              <Text style={[styles.statLabel, { color: tokens.colors.textMuted }]}>
-                BP Readings
-              </Text>
-            </View>
-            <View style={[styles.statCard, { backgroundColor: tokens.colors.card }, shadows.subtle]}>
-              <Text style={[styles.statNumber, { color: tokens.colors.primary }]}>
-                {stats.medications}
-              </Text>
-              <Text style={[styles.statLabel, { color: tokens.colors.textMuted }]}>
-                Medications
-              </Text>
-            </View>
-            <View style={[styles.statCard, { backgroundColor: tokens.colors.card }, shadows.subtle]}>
-              <Text style={[styles.statNumber, { color: tokens.colors.primary }]}>
-                {stats.journalEntries}
-              </Text>
-              <Text style={[styles.statLabel, { color: tokens.colors.textMuted }]}>
-                Journal Entries
-              </Text>
-            </View>
-            <View style={[styles.statCard, { backgroundColor: tokens.colors.card }, shadows.subtle]}>
-              <Text style={[styles.statNumber, { color: tokens.colors.primary }]}>
-                {stats.daysTracked}
-              </Text>
-              <Text style={[styles.statLabel, { color: tokens.colors.textMuted }]}>
-                Days Tracked
-              </Text>
+                  <IconSymbol 
+                    name={option.icon as any} 
+                    size={20} 
+                    color={preference === option.id ? '#FFFFFF' : tokens.colors.textMuted} 
+                  />
+                  <Text
+                    style={[
+                      styles.themeOptionText,
+                      { color: tokens.colors.textMuted },
+                      preference === option.id && { color: '#FFFFFF' },
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
           </View>
         </View>
 
-        {/* Data & Privacy Section */}
+        {/* Settings Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: tokens.colors.textHandwritten }]}>
-            Data & Privacy
+            Settings
           </Text>
           
           <TouchableOpacity 
             style={[styles.settingItem, { backgroundColor: tokens.colors.card }, shadows.subtle]} 
             onPress={handleExportData}
+            activeOpacity={0.7}
           >
-            <View style={styles.settingContent}>
-              <IconSymbol name="square.and.arrow.up" size={20} color={tokens.colors.primary} />
-              <View style={styles.settingText}>
-                <Text style={[styles.settingTitle, { color: tokens.colors.text }]}>
-                  Export Data
-                </Text>
-                <Text style={[styles.settingSubtitle, { color: tokens.colors.textMuted }]}>
-                  Download your health data
-                </Text>
-              </View>
+            <View style={[styles.settingIcon, { backgroundColor: tokens.colors.accent + '20' }]}>
+              <IconSymbol name="square.and.arrow.up" size={18} color={tokens.colors.accent} />
             </View>
-            <IconSymbol name="chevron.right" size={18} color={tokens.colors.textMuted} />
+            <View style={styles.settingContent}>
+              <Text style={[styles.settingTitle, { color: tokens.colors.text }]}>
+                Export Data
+              </Text>
+              <Text style={[styles.settingSubtitle, { color: tokens.colors.textMuted }]}>
+                Download your health data as CSV/JSON
+              </Text>
+            </View>
+            <IconSymbol name="chevron.right" size={16} color={tokens.colors.textMuted} />
           </TouchableOpacity>
 
           <TouchableOpacity 
             style={[styles.settingItem, { backgroundColor: tokens.colors.card }, shadows.subtle]} 
             onPress={handleBiometricSettings}
+            activeOpacity={0.7}
           >
-            <View style={styles.settingContent}>
-              <IconSymbol name="faceid" size={20} color={tokens.colors.primary} />
-              <View style={styles.settingText}>
-                <Text style={[styles.settingTitle, { color: tokens.colors.text }]}>
-                  Biometric Lock
-                </Text>
-                <Text style={[styles.settingSubtitle, { color: tokens.colors.textMuted }]}>
-                  Secure with fingerprint/Face ID
-                </Text>
-              </View>
+            <View style={[styles.settingIcon, { backgroundColor: tokens.colors.teal + '20' }]}>
+              <IconSymbol name="faceid" size={18} color={tokens.colors.teal} />
             </View>
-            <IconSymbol name="chevron.right" size={18} color={tokens.colors.textMuted} />
+            <View style={styles.settingContent}>
+              <Text style={[styles.settingTitle, { color: tokens.colors.text }]}>
+                Biometric Lock
+              </Text>
+              <Text style={[styles.settingSubtitle, { color: tokens.colors.textMuted }]}>
+                Secure with fingerprint or Face ID
+              </Text>
+            </View>
+            <IconSymbol name="chevron.right" size={16} color={tokens.colors.textMuted} />
           </TouchableOpacity>
-        </View>
 
-        {/* App Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: tokens.colors.textHandwritten }]}>
-            App
-          </Text>
-          
           <TouchableOpacity 
             style={[styles.settingItem, { backgroundColor: tokens.colors.card }, shadows.subtle]} 
             onPress={handleAbout}
+            activeOpacity={0.7}
           >
-            <View style={styles.settingContent}>
-              <IconSymbol name="info.circle" size={20} color={tokens.colors.primary} />
-              <View style={styles.settingText}>
-                <Text style={[styles.settingTitle, { color: tokens.colors.text }]}>
-                  About
-                </Text>
-                <Text style={[styles.settingSubtitle, { color: tokens.colors.textMuted }]}>
-                  Version 1.0.0
-                </Text>
-              </View>
+            <View style={[styles.settingIcon, { backgroundColor: tokens.colors.coral + '20' }]}>
+              <IconSymbol name="info.circle" size={18} color={tokens.colors.coral} />
             </View>
-            <IconSymbol name="chevron.right" size={18} color={tokens.colors.textMuted} />
+            <View style={styles.settingContent}>
+              <Text style={[styles.settingTitle, { color: tokens.colors.text }]}>
+                About
+              </Text>
+              <Text style={[styles.settingSubtitle, { color: tokens.colors.textMuted }]}>
+                Version 1.0.1 •Developed by Flying-spagetti 
+              </Text>
+            </View>
+            <IconSymbol name="chevron.right" size={16} color={tokens.colors.textMuted} />
           </TouchableOpacity>
         </View>
 
         {/* Disclaimer */}
-        <Text style={[styles.disclaimer, { color: tokens.colors.textMuted }]}>
-          This app helps you track your health data but cannot diagnose, treat, or prevent any
-          disease. Always consult a healthcare professional with any concerns.
-        </Text>
+        <View style={[styles.disclaimerCard, { backgroundColor: tokens.colors.surface }]}>
+          <IconSymbol name="heart.text.square" size={20} color={tokens.colors.textMuted} />
+          <Text style={[styles.disclaimer, { color: tokens.colors.textMuted }]}>
+            This is app bro, don't expect it to be perfect, afterall manam ae perfect kadhu.
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -298,45 +480,95 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingBottom: spacing.huge,
   },
-  header: {
+  
+  // Hero Profile Section
+  heroCard: {
+    borderRadius: borderRadius.xxl,
+    padding: spacing.lg,
     marginBottom: spacing.xl,
   },
-  title: {
-    fontSize: 32,
-    fontFamily: 'Caveat-SemiBold',
-    marginBottom: spacing.xxs,
-  },
-  subtitle: {
-    fontSize: 14,
-    fontFamily: 'Nunito-Regular',
-  },
-  userCard: {
-    borderRadius: borderRadius.xl,
-    padding: spacing.md,
+  profileHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
   },
-  userAvatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
+  avatarContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 3,
+    padding: 2,
+    position: 'relative',
   },
-  userInfo: {
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 36,
+  },
+  onlineIndicator: {
+    position: 'absolute',
+    bottom: 4,
+    right: 4,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  profileInfo: {
     flex: 1,
   },
-  userName: {
-    fontSize: 20,
+  profileName: {
+    fontSize: 24,
     fontFamily: 'Nunito-Bold',
-    marginBottom: spacing.xxs,
+    marginBottom: 2,
   },
-  userEmail: {
+  profileTagline: {
     fontSize: 14,
     fontFamily: 'Nunito-Regular',
+    marginBottom: spacing.xs,
   },
+  memberSince: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  memberSinceText: {
+    fontSize: 12,
+    fontFamily: 'Nunito-Regular',
+  },
+  
+  // Streak Banner
+  streakBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+  },
+  streakItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  streakEmoji: {
+    fontSize: 24,
+  },
+  streakValue: {
+    fontSize: 20,
+    fontFamily: 'Nunito-Bold',
+  },
+  streakLabel: {
+    fontSize: 11,
+    fontFamily: 'Nunito-Regular',
+  },
+  streakDivider: {
+    width: 1,
+    height: 36,
+  },
+  
+  // Section
   section: {
     marginBottom: spacing.xl,
   },
@@ -345,56 +577,105 @@ const styles = StyleSheet.create({
     fontFamily: 'Caveat-SemiBold',
     marginBottom: spacing.md,
   },
-  themeOptions: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  themeChip: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-  },
-  themeChipText: {
-    fontSize: 14,
-    fontFamily: 'Nunito-SemiBold',
-  },
-  statsGrid: {
+  
+  // Health Journey Grid
+  journeyGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
   },
-  statCard: {
+  journeyCard: {
     width: '48%',
     borderRadius: borderRadius.xl,
     padding: spacing.md,
     alignItems: 'center',
   },
-  statNumber: {
-    fontSize: 28,
-    fontFamily: 'Nunito-Bold',
-    marginBottom: spacing.xxs,
+  journeyIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
   },
-  statLabel: {
+  journeyValue: {
+    fontSize: 24,
+    fontFamily: 'Nunito-Bold',
+    marginBottom: 2,
+  },
+  journeyLabel: {
     fontSize: 12,
     fontFamily: 'Nunito-Regular',
     textAlign: 'center',
   },
+  
+  // Active Tracking
+  trackingCard: {
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+  },
+  trackingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+  },
+  trackingItem: {
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  trackingValue: {
+    fontSize: 28,
+    fontFamily: 'Nunito-Bold',
+  },
+  trackingLabel: {
+    fontSize: 12,
+    fontFamily: 'Nunito-Regular',
+  },
+  trackingDivider: {
+    width: 1,
+    height: 50,
+  },
+  
+  // Theme Options
+  themeCard: {
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+  },
+  themeOptions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  themeOption: {
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+  },
+  themeOptionText: {
+    fontSize: 13,
+    fontFamily: 'Nunito-SemiBold',
+  },
+  
+  // Settings
   settingItem: {
     borderRadius: borderRadius.xl,
     padding: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: spacing.md,
     marginBottom: spacing.sm,
   },
-  settingContent: {
-    flexDirection: 'row',
+  settingIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: spacing.md,
-    flex: 1,
   },
-  settingText: {
+  settingContent: {
     flex: 1,
   },
   settingTitle: {
@@ -406,11 +687,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: 'Nunito-Regular',
   },
+  
+  // Disclaimer
+  disclaimerCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginTop: spacing.md,
+  },
   disclaimer: {
+    flex: 1,
     fontSize: 12,
     fontFamily: 'Nunito-Regular',
     lineHeight: 18,
-    textAlign: 'center',
-    marginTop: spacing.lg,
   },
 });

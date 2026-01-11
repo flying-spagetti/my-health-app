@@ -88,8 +88,8 @@ export default function AddMedicationScreen() {
         });
       }
       
-      // Reschedule reminders
-      await rescheduleAllReminders();
+      // Reschedule reminders (force reschedule since we added a new item)
+      await rescheduleAllReminders(true);
       
       Alert.alert('Success', 'Medication added! We\'ll remind you when it\'s due.', [
         { text: 'OK', onPress: () => router.push('/(tabs)') }

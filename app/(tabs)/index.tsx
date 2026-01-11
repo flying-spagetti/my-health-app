@@ -10,38 +10,38 @@
  * - Quick actions
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
-import { 
-  RefreshControl, 
-  ScrollView, 
-  StyleSheet, 
-  Text, 
-  TouchableOpacity, 
-  View,
-  Image,
+import { useFocusEffect } from '@react-navigation/native';
+import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import {
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
 
-import { useThemePreference } from '@/hooks/use-theme-preference';
-import { 
-  getThemeTokens, 
-  getScreenBackground,
-  getMoodColor,
-  spacing,
-  borderRadius,
-  shadows,
-} from '@/constants/theme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { 
-  getJournalEntries, 
-  getActivityAggregates, 
-  getWorkouts, 
+import {
+  borderRadius,
+  getMoodColor,
+  getScreenBackground,
+  getThemeTokens,
+  shadows,
+  spacing,
+} from '@/constants/theme';
+import { useThemePreference } from '@/hooks/use-theme-preference';
+import {
+  createTrackingEvent,
+  getJournalEntries,
+  getMigraineReadings,
   getSteps,
+  getWorkouts
 } from '@/services/db';
-import { getDueItemsToday, DueItem } from '@/services/tracking';
-import { createTrackingEvent } from '@/services/db';
+import { DueItem, getDueItemsToday } from '@/services/tracking';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -59,6 +59,10 @@ export default function HomeScreen() {
   });
   const [activityMinutes, setActivityMinutes] = useState(0);
   const [steps, setSteps] = useState(0);
+  const [migraineStats, setMigraineStats] = useState({
+    thisMonth: 0,
+    lastMigraine: null as Date | null,
+  });
 
   const loadData = useCallback(async () => {
     try {
@@ -91,11 +95,20 @@ export default function HomeScreen() {
       const items = await getDueItemsToday();
       setDueItems(items.slice(0, 4));
 
-      // Load activity data
-      const [workouts, stepsData] = await Promise.all([
+      // Load activity data and migraines
+      const [workouts, stepsData, migraines] = await Promise.all([
         getWorkouts(),
         getSteps(),
+        getMigraineReadings(),
       ]);
+      
+      // Calculate migraine stats
+      const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      const migrainesThisMonth = migraines.filter((m: any) => m.started_at >= monthAgo);
+      setMigraineStats({
+        thisMonth: migrainesThisMonth.length,
+        lastMigraine: migraines.length > 0 ? new Date(migraines[0].started_at) : null,
+      });
       
       // Calculate today's activity minutes
       const today = new Date();
@@ -185,6 +198,18 @@ export default function HomeScreen() {
     return 'Good evening';
   };
 
+  const formatLastMigraine = (date: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    
+    if (days === 0) return 'Today';
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days} days ago`;
+    if (days < 30) return `${Math.floor(days / 7)} week${Math.floor(days / 7) > 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
   return (
     <SafeAreaView 
       style={[styles.container, { backgroundColor }]} 
@@ -205,14 +230,29 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <View style={[styles.avatar, { backgroundColor: tokens.colors.primary }]}>
-              <IconSymbol name="person.fill" size={20} color="#FFFFFF" />
+              {/* TODO: Add profile-image.png to assets/images/ to display user avatar */}
+              {/* For now, showing icon placeholder. To add your image:
+                  1. Add profile-image.png to assets/images/
+                  2. Uncomment the Image component below and remove the IconSymbol
+                  
+                  <Image 
+                    source={require('@/assets/images/profile-image.png')} 
+                    style={{ width: 36, height: 36, borderRadius: 18 }} 
+                    resizeMode="cover" 
+                  />
+              */}
+              <Image 
+                    source={require('@/assets/images/profile-image.jpg')} 
+                    style={{ width: 36, height: 36, borderRadius: 18 }} 
+                    resizeMode="cover" 
+                  />
             </View>
             <View>
               <Text style={[styles.greeting, { color: tokens.colors.textSecondary }]}>
                 {getGreeting()},
               </Text>
               <Text style={[styles.userName, { color: tokens.colors.text }]}>
-                User
+                Gnaneswar
               </Text>
             </View>
           </View>
@@ -222,20 +262,21 @@ export default function HomeScreen() {
         </View>
 
         {/* Mood History Card */}
-        <View style={[styles.card, { backgroundColor: tokens.colors.card }, shadows.low]}>
+        <TouchableOpacity 
+          style={[styles.card, { backgroundColor: tokens.colors.card }, shadows.low]}
+          onPress={() => router.push('/(tabs)/mood')}
+          activeOpacity={0.8}
+        >
           <View style={styles.cardHeader}>
             <Text style={[styles.cardTitle, { color: tokens.colors.text }]}>
               Mood history
             </Text>
-            <TouchableOpacity 
-              style={styles.dropdown}
-              onPress={() => router.push('/(tabs)/mood')}
-            >
+            <View style={styles.dropdown}>
               <Text style={[styles.dropdownText, { color: tokens.colors.textMuted }]}>
                 Week
               </Text>
-              <IconSymbol name="chevron.down" size={14} color={tokens.colors.textMuted} />
-            </TouchableOpacity>
+              <IconSymbol name="chevron.right" size={14} color={tokens.colors.textMuted} />
+            </View>
           </View>
           
           <View style={styles.weekCalendar}>
@@ -266,12 +307,16 @@ export default function HomeScreen() {
               </View>
             ))}
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
           {/* Stress Level Card */}
-          <View style={[styles.statCard, { backgroundColor: tokens.colors.card }, shadows.low]}>
+          <TouchableOpacity 
+            style={[styles.statCard, { backgroundColor: tokens.colors.card }, shadows.low]}
+            onPress={() => router.push('/(tabs)/mood')}
+            activeOpacity={0.7}
+          >
             <Text style={[styles.statTitle, { color: tokens.colors.text }]}>
               Stress level
             </Text>
@@ -285,10 +330,14 @@ export default function HomeScreen() {
             <Text style={[styles.statFooter, { color: tokens.colors.textMuted }]}>
               Avg: {todayStats.avgStress > 0 ? todayStats.avgStress.toFixed(1) : '—'}/10
             </Text>
-          </View>
+          </TouchableOpacity>
 
           {/* Health Diary Card */}
-          <View style={[styles.statCard, { backgroundColor: tokens.colors.card }, shadows.low]}>
+          <TouchableOpacity 
+            style={[styles.statCard, { backgroundColor: tokens.colors.card }, shadows.low]}
+            onPress={() => router.push('/(tabs)/mood')}
+            activeOpacity={0.7}
+          >
             <Text style={[styles.statTitle, { color: tokens.colors.text }]}>
               Health diary
             </Text>
@@ -306,7 +355,7 @@ export default function HomeScreen() {
             <Text style={[styles.statFooter, { color: tokens.colors.textMuted }]}>
               Your entries help you see your progress
             </Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Due Today Section */}
@@ -377,7 +426,7 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* Activity Summary */}
+        {/* Activity & Health Summary */}
         <Text style={[styles.sectionTitle, { color: tokens.colors.textHandwritten }]}>
           Today's activity
         </Text>
@@ -410,31 +459,73 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        {/* Migraine Tracker Card */}
+        <TouchableOpacity
+          style={[styles.migraineCard, { backgroundColor: tokens.colors.card }, shadows.low]}
+          onPress={() => router.push('/migraine-tracker')}
+          activeOpacity={0.7}
+        >
+          <View style={styles.migraineHeader}>
+            <View style={[styles.migraineIconContainer, { backgroundColor: tokens.colors.warning + '20' }]}>
+              <IconSymbol name="bolt.fill" size={20} color={tokens.colors.warning} />
+            </View>
+            <View style={styles.migraineInfo}>
+              <Text style={[styles.migraineTitle, { color: tokens.colors.text }]}>
+                Migraine Tracker
+              </Text>
+              <Text style={[styles.migraineSubtitle, { color: tokens.colors.textMuted }]}>
+                {migraineStats.thisMonth === 0 
+                  ? 'No migraines this month 🎉' 
+                  : `${migraineStats.thisMonth} migraine${migraineStats.thisMonth === 1 ? '' : 's'} this month`}
+              </Text>
+            </View>
+            <IconSymbol name="chevron.right" size={18} color={tokens.colors.textMuted} />
+          </View>
+          {migraineStats.lastMigraine && (
+            <View style={[styles.migraineLastEntry, { borderTopColor: tokens.colors.border }]}>
+              <Text style={[styles.migraineLastLabel, { color: tokens.colors.textMuted }]}>
+                Last migraine:
+              </Text>
+              <Text style={[styles.migraineLastDate, { color: tokens.colors.text }]}>
+                {formatLastMigraine(migraineStats.lastMigraine)}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
         {/* Quick Actions */}
-        <View style={styles.quickActions}>
+        <View style={styles.quickActionsGrid}>
           <TouchableOpacity
-            style={[styles.quickAction, { backgroundColor: tokens.colors.primary }]}
+            style={[styles.quickActionSmall, { backgroundColor: tokens.colors.primary }]}
             onPress={() => router.push('/add-journal')}
             activeOpacity={0.8}
           >
-            <IconSymbol name="plus" size={20} color="#FFFFFF" />
-            <Text style={styles.quickActionText}>Journal</Text>
+            <IconSymbol name="book.fill" size={18} color="#FFFFFF" />
+            <Text style={styles.quickActionSmallText}>Journal</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.quickAction, { backgroundColor: tokens.colors.teal }]}
+            style={[styles.quickActionSmall, { backgroundColor: tokens.colors.teal }]}
             onPress={() => router.push('/add-meditation')}
             activeOpacity={0.8}
           >
-            <IconSymbol name="leaf.fill" size={20} color="#FFFFFF" />
-            <Text style={styles.quickActionText}>Meditate</Text>
+            <IconSymbol name="leaf.fill" size={18} color="#FFFFFF" />
+            <Text style={styles.quickActionSmallText}>Meditate</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.quickAction, { backgroundColor: tokens.colors.coral }]}
+            style={[styles.quickActionSmall, { backgroundColor: tokens.colors.coral }]}
             onPress={() => router.push('/add-bp')}
             activeOpacity={0.8}
           >
-            <IconSymbol name="heart.fill" size={20} color="#FFFFFF" />
-            <Text style={styles.quickActionText}>Log BP</Text>
+            <IconSymbol name="heart.fill" size={18} color="#FFFFFF" />
+            <Text style={styles.quickActionSmallText}>Log BP</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.quickActionSmall, { backgroundColor: tokens.colors.warning }]}
+            onPress={() => router.push('/add-migraine')}
+            activeOpacity={0.8}
+          >
+            <IconSymbol name="bolt.fill" size={18} color="#FFFFFF" />
+            <Text style={styles.quickActionSmallText}>Migraine</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -642,22 +733,68 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'Nunito-Regular',
   },
-  quickActions: {
+  migraineCard: {
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  migraineHeader: {
     flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  migraineIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  migraineInfo: {
+    flex: 1,
+  },
+  migraineTitle: {
+    fontSize: 16,
+    fontFamily: 'Nunito-SemiBold',
+    marginBottom: 2,
+  },
+  migraineSubtitle: {
+    fontSize: 13,
+    fontFamily: 'Nunito-Regular',
+  },
+  migraineLastEntry: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+  },
+  migraineLastLabel: {
+    fontSize: 12,
+    fontFamily: 'Nunito-Regular',
+  },
+  migraineLastDate: {
+    fontSize: 13,
+    fontFamily: 'Nunito-SemiBold',
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
-  quickAction: {
-    flex: 1,
+  quickActionSmall: {
+    width: '48%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.xs,
     paddingVertical: spacing.md,
-    borderRadius: borderRadius.full,
+    borderRadius: borderRadius.xl,
   },
-  quickActionText: {
+  quickActionSmallText: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Nunito-SemiBold',
   },
 });

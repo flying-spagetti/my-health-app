@@ -54,8 +54,8 @@ export default function AddAppointmentScreen() {
         notes: notes.trim() || undefined,
       });
       
-      // Reschedule reminders
-      await rescheduleAllReminders();
+      // Reschedule reminders (force reschedule since we added a new item)
+      await rescheduleAllReminders(true);
       
       Alert.alert('Success', 'Appointment added successfully!', [
         { text: 'OK', onPress: () => router.back() }

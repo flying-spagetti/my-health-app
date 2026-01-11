@@ -1,15 +1,25 @@
 // services/reminders.ts
 import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import { getMedications, getSupplements, getAppointments, getDoseSchedulesByParent, getMeditationRoutines } from './db';
 
-// Configure notification handler
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+// Check if we're in Expo Go (where notifications have limitations)
+const isExpoGo = Constants.executionEnvironment === 'storeClient';
+
+// Configure notification handler (only if notifications are available)
+try {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
+} catch (error) {
+  // Silently handle if notifications aren't available (e.g., in Expo Go)
+  console.warn('Could not set notification handler:', error);
+}
 
 // Flag to prevent concurrent scheduling
 let isScheduling = false;
@@ -18,15 +28,27 @@ const SCHEDULE_DEBOUNCE_MS = 5000; // Don't reschedule more than once every 5 se
 
 // Request permissions
 export async function requestNotificationPermissions(): Promise<boolean> {
-  const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  let finalStatus = existingStatus;
-  
-  if (existingStatus !== 'granted') {
-    const { status } = await Notifications.requestPermissionsAsync();
-    finalStatus = status;
+  // In Expo Go, local notifications should still work, but we'll handle gracefully
+  if (isExpoGo) {
+    console.log('Running in Expo Go - notifications may have limitations');
   }
   
-  return finalStatus === 'granted';
+  try {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    
+    return finalStatus === 'granted';
+  } catch (error) {
+    // Handle cases where notifications aren't available
+    console.warn('Notification permissions not available (this is normal in Expo Go for remote notifications):', error);
+    // Local scheduled notifications should still work in Expo Go
+    return false;
+  }
 }
 
 // Cancel all notifications
@@ -35,7 +57,8 @@ export async function cancelAllNotifications() {
     await Notifications.cancelAllScheduledNotificationsAsync();
     console.log('All notifications cancelled');
   } catch (error) {
-    console.error('Error cancelling notifications:', error);
+    // Silently handle errors (e.g., when notifications aren't available in Expo Go)
+    console.warn('Could not cancel notifications (may not be available in Expo Go):', error);
   }
 }
 
@@ -52,8 +75,8 @@ async function scheduleDoseReminders(
   const [hours, minutes] = timeOfDay.split(':').map(Number);
   const now = Date.now();
   
-  // Schedule for next 7 days only (to reduce notification spam)
-  for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
+  // Schedule for next 30 days (local app, so we can schedule further ahead)
+  for (let dayOffset = 0; dayOffset < 30; dayOffset++) {
     const date = new Date();
     date.setDate(date.getDate() + dayOffset);
     const dayOfWeek = date.getDay();
@@ -162,7 +185,7 @@ async function scheduleMeditationReminders() {
     return;
   }
   
-  // Schedule for next 7 days only
+  // Schedule for next 30 days
   const defaultTime = new Date();
   defaultTime.setHours(20, 0, 0, 0); // 8 PM
   
@@ -170,7 +193,7 @@ async function scheduleMeditationReminders() {
     defaultTime.setDate(defaultTime.getDate() + 1);
   }
   
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 30; i++) {
     const reminderDate = new Date(defaultTime);
     reminderDate.setDate(reminderDate.getDate() + i);
     const dateStr = reminderDate.toISOString().split('T')[0];
@@ -196,17 +219,105 @@ async function scheduleMeditationReminders() {
   }
 }
 
-// Reschedule all reminders (with debouncing)
-export async function rescheduleAllReminders() {
+// Clean up expired notifications
+async function cleanupExpiredNotifications() {
+  try {
+    const allNotifications = await Notifications.getAllScheduledNotificationsAsync();
+    const now = Date.now();
+    let cleanedCount = 0;
+    
+    for (const notification of allNotifications) {
+      // Check if notification trigger date has passed
+      const triggerDate = notification.trigger as any;
+      if (triggerDate?.date && triggerDate.date < now) {
+        await Notifications.cancelScheduledNotificationAsync(notification.identifier);
+        cleanedCount++;
+      }
+    }
+    
+    if (cleanedCount > 0) {
+      console.log(`Cleaned up ${cleanedCount} expired notifications`);
+    }
+  } catch (error) {
+    console.error('Error cleaning up expired notifications:', error);
+  }
+}
+
+// Check if rescheduling is needed (only reschedule if notifications are missing or outdated)
+async function needsRescheduling(): Promise<boolean> {
+  try {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    const now = Date.now();
+    const thirtyDaysFromNow = now + (30 * 24 * 60 * 60 * 1000);
+    
+    // Check if we have notifications scheduled for the next 30 days
+    const futureNotifications = scheduled.filter(n => {
+      const triggerDate = (n.trigger as any)?.date;
+      return triggerDate && triggerDate > now && triggerDate <= thirtyDaysFromNow;
+    });
+    
+    // If we have very few notifications scheduled, we need to reschedule
+    if (futureNotifications.length < 10) {
+      return true;
+    }
+    
+    // Check if we have medications/supplements that need scheduling
+    const medications = await getMedications(true);
+    const supplements = await getSupplements(true);
+    
+    if (medications.length === 0 && supplements.length === 0) {
+      return false;
+    }
+    
+    // Count how many medication/supplement notifications we have
+    const medSuppNotifications = scheduled.filter(n => {
+      const data = n.content.data;
+      return data?.type === 'medication' || data?.type === 'supplement';
+    });
+    
+    // Estimate expected count: each med/supp with schedule should have ~30 notifications (one per day for 30 days)
+    let expectedCount = 0;
+    for (const med of medications) {
+      const schedules = await getDoseSchedulesByParent('medication', med.id);
+      // Calculate how many days per week this schedule runs
+      for (const schedule of schedules) {
+        const daysOfWeek = JSON.parse(schedule.days_of_week) as number[];
+        // Approximate: 30 days / 7 days per week * number of days per week
+        expectedCount += Math.ceil((30 / 7) * daysOfWeek.length);
+      }
+    }
+    for (const supp of supplements) {
+      const schedules = await getDoseSchedulesByParent('supplement', supp.id);
+      for (const schedule of schedules) {
+        const daysOfWeek = JSON.parse(schedule.days_of_week) as number[];
+        expectedCount += Math.ceil((30 / 7) * daysOfWeek.length);
+      }
+    }
+    
+    // If we have significantly fewer notifications than expected, reschedule
+    return medSuppNotifications.length < expectedCount * 0.5;
+  } catch (error) {
+    // In Expo Go, notifications might not be fully available
+    if (isExpoGo) {
+      console.warn('Could not check notification status (Expo Go limitation) - will attempt to reschedule');
+    } else {
+      console.error('Error checking if rescheduling needed:', error);
+    }
+    return true; // Default to rescheduling on error
+  }
+}
+
+// Reschedule all reminders (with debouncing and smart rescheduling)
+export async function rescheduleAllReminders(force: boolean = false) {
   // Prevent concurrent scheduling
   if (isScheduling) {
     console.log('Scheduling already in progress, skipping...');
     return;
   }
   
-  // Debounce: don't reschedule if called too recently
+  // Debounce: don't reschedule if called too recently (unless forced)
   const now = Date.now();
-  if (now - lastScheduleTime < SCHEDULE_DEBOUNCE_MS) {
+  if (!force && now - lastScheduleTime < SCHEDULE_DEBOUNCE_MS) {
     console.log('Rescheduling debounced, too soon since last schedule');
     return;
   }
@@ -217,15 +328,34 @@ export async function rescheduleAllReminders() {
   try {
     const hasPermission = await requestNotificationPermissions();
     if (!hasPermission) {
-      console.log('Notification permissions not granted');
-      return;
+      if (isExpoGo) {
+        console.log('Running in Expo Go - local notifications may still work but permissions may be limited');
+        // Continue anyway - local notifications might still work
+      } else {
+        console.log('Notification permissions not granted');
+        return;
+      }
     }
     
-    // Cancel all existing notifications first
-    await cancelAllNotifications();
+    // Clean up expired notifications first (don't cancel all)
+    await cleanupExpiredNotifications();
     
-    // Small delay to ensure cancellation is processed
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Check if rescheduling is actually needed (unless forced)
+    if (!force) {
+      const needsReschedule = await needsRescheduling();
+      if (!needsReschedule) {
+        console.log('Notifications are up to date, skipping reschedule');
+        isScheduling = false;
+        return;
+      }
+    }
+    
+    // Only cancel and reschedule if forced or if we detected missing notifications
+    if (force) {
+      await cancelAllNotifications();
+      // Small delay to ensure cancellation is processed
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
     
     // Schedule medication reminders
     const medications = await getMedications(true);

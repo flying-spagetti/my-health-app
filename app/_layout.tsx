@@ -30,9 +30,10 @@ function RootLayoutInner() {
         // Initialize database
         initDb();
         
-        // Schedule reminders after a delay to ensure DB is ready
+        // Check and reschedule reminders if needed (don't force - only reschedule if missing)
+        // This prevents bombarding notifications on app startup
         setTimeout(() => {
-          rescheduleAllReminders().catch(console.error);
+          rescheduleAllReminders(false).catch(console.error);
         }, 2000);
       } catch (e) {
         console.warn('Error during app initialization:', e);

@@ -6,7 +6,7 @@ type ThemePreference = 'system' | 'light' | 'dark';
 type ThemePreferenceContextValue = {
   preference: ThemePreference;
   setPreference: (pref: ThemePreference) => void;
-  colorScheme: 'light' | 'dark';
+  colorScheme: 'light';
 };
 
 const ThemePreferenceContext = createContext<ThemePreferenceContextValue | undefined>(undefined);
@@ -20,11 +20,11 @@ export function ThemePreferenceProvider({ children }: Props) {
   const [preference, setPreference] = useState<ThemePreference>('system');
 
   // Derive the effective scheme from the preference + system
-  const colorScheme = useMemo<'light' | 'dark'>(() => {
+  const colorScheme = useMemo<('light')>(() => {
     if (preference === 'system') {
-      return systemScheme === 'dark' ? 'dark' : 'light';
+      return 'light';
     }
-    return preference;
+    return 'light';
   }, [preference, systemScheme]);
 
   // In a real app you might persist this with SecureStore; for now we keep it in memory.
