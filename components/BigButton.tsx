@@ -1,45 +1,114 @@
-// src/components/BigButton.tsx
+/**
+ * BigButton Component
+ * 
+ * Primary call-to-action button following design.json spec:
+ * - Pill-shaped (full border radius)
+ * - Dark background with white text
+ * - Soft shadow
+ */
+
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { tokens } from '../constants/theme';
+import { StyleSheet, Text, TouchableOpacity, ActivityIndicator, ViewStyle } from 'react-native';
+import { 
+  getThemeTokens,
+  spacing,
+  borderRadius,
+  shadows,
+} from '@/constants/theme';
+import { useThemePreference } from '@/hooks/use-theme-preference';
 
 interface BigButtonProps {
   title: string;
   onPress: () => void;
   disabled?: boolean;
+  loading?: boolean;
+  variant?: 'primary' | 'secondary' | 'outline';
+  style?: ViewStyle;
 }
 
-export default function BigButton({ title, onPress, disabled = false }: BigButtonProps) {
+export default function BigButton({ 
+  title, 
+  onPress, 
+  disabled = false,
+  loading = false,
+  variant = 'primary',
+  style,
+}: BigButtonProps) {
+  const { colorScheme } = useThemePreference();
+  const tokens = getThemeTokens(colorScheme);
+
+  const getButtonStyle = () => {
+    switch (variant) {
+      case 'secondary':
+        return { backgroundColor: tokens.colors.primary };
+      case 'outline':
+        return { 
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderColor: tokens.colors.buttonPrimary,
+        };
+      case 'primary':
+      default:
+        return { backgroundColor: tokens.colors.buttonPrimary };
+    }
+  };
+
+  const getTextColor = () => {
+    switch (variant) {
+      case 'outline':
+        return tokens.colors.buttonPrimary;
+      default:
+        return tokens.colors.buttonPrimaryText;
+    }
+  };
+
   return (
     <TouchableOpacity 
-      style={[styles.btn, disabled && styles.btnDisabled]} 
+      style={[
+        styles.button,
+        getButtonStyle(),
+        shadows.medium,
+        disabled && styles.buttonDisabled,
+        style,
+      ]} 
       onPress={onPress}
-      disabled={disabled}
+      disabled={disabled || loading}
+      activeOpacity={0.8}
     >
-      <Text style={[styles.txt, disabled && styles.txtDisabled]}>{title}</Text>
+      {loading ? (
+        <ActivityIndicator size="small" color={getTextColor()} />
+      ) : (
+        <Text 
+          style={[
+            styles.text, 
+            { color: getTextColor() },
+            disabled && styles.textDisabled,
+          ]}
+        >
+          {title}
+        </Text>
+      )}
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  btn: {
-    backgroundColor: tokens.colors.primary,
-    paddingVertical: tokens.spacing.md,
-    paddingHorizontal: tokens.spacing.lg,
-    borderRadius: tokens.borderRadius.md,
+  button: {
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xxl,
+    borderRadius: borderRadius.full,
     alignItems: 'center',
-    ...tokens.shadows.sm,
+    justifyContent: 'center',
+    minHeight: 56,
   },
-  btnDisabled: {
-    backgroundColor: tokens.colors.textMuted,
-    opacity: 0.6,
+  buttonDisabled: {
+    opacity: 0.5,
   },
-  txt: { 
-    color: tokens.colors.bg, 
-    fontWeight: '600', 
-    fontSize: tokens.typography.body 
+  text: { 
+    fontFamily: 'Nunito-SemiBold',
+    fontSize: 16,
   },
-  txtDisabled: {
-    color: tokens.colors.textMuted,
+  textDisabled: {
+    opacity: 0.8,
   },
 });

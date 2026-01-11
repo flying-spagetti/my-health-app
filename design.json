@@ -1,0 +1,1008 @@
+{
+  "$schema": "Custom Design System for Wellness Health App",
+  "$description": "A warm, organic, hand-crafted wellness app aesthetic that feels like a gentle friend guiding your health journey. Inspired by premium mindfulness apps with playful illustrated characters and calming color palettes.",
+  
+  "designPrinciples": {
+    "philosophy": "Create a warm, inviting digital sanctuary that feels hand-crafted, not clinical. Every element should feel approachable, like a supportive friend rather than a sterile medical tool.",
+    "coreValues": [
+      {
+        "name": "Warmth & Approachability",
+        "description": "Use soft colors, rounded shapes, and friendly illustrations to create emotional safety. The app should feel like a cozy blanket, not a hospital."
+      },
+      {
+        "name": "Organic & Hand-Crafted",
+        "description": "Incorporate handwritten typography and illustrated characters to feel human-made. Avoid sharp edges and cold, mechanical aesthetics."
+      },
+      {
+        "name": "Calming, Not Clinical",
+        "description": "Muted, nature-inspired color palettes. Avoid harsh contrasts. Everything should breathe and have generous whitespace."
+      },
+      {
+        "name": "Playful Encouragement",
+        "description": "Use whimsical illustrated mascots to guide users. Celebrate small wins. Make health tracking feel like self-care, not homework."
+      },
+      {
+        "name": "Gentle Visual Hierarchy",
+        "description": "Lead the eye softly through content. Use subtle shadows and layering rather than bold dividers. Cards float gently above backgrounds."
+      }
+    ]
+  },
+
+  "colorPalette": {
+    "description": "A muted, nature-inspired palette that evokes calm meadows, soft lavender fields, and quiet mornings. Colors should never shout—they whisper.",
+    
+    "backgrounds": {
+      "lavender": {
+        "value": "#C5BFDC",
+        "usage": "Primary app background, dashboard screens",
+        "mood": "Calming, dreamy, introspective"
+      },
+      "sage": {
+        "value": "#B8D4B4",
+        "usage": "Mood check-in screens, positive reinforcement",
+        "mood": "Fresh, grounding, hopeful"
+      },
+      "cream": {
+        "value": "#F7F6F2",
+        "usage": "Secondary screens, meditation content",
+        "mood": "Clean, warm, paper-like"
+      },
+      "softMint": {
+        "value": "#D4E8D6",
+        "usage": "Lighter green accents, success states",
+        "mood": "Refreshing, optimistic"
+      }
+    },
+
+    "surfaces": {
+      "cardWhite": {
+        "value": "#FFFFFF",
+        "usage": "All card surfaces",
+        "shadow": "0 4px 20px rgba(0, 0, 0, 0.06)"
+      },
+      "cardCream": {
+        "value": "#FAFAF8",
+        "usage": "Nested cards, secondary surfaces"
+      },
+      "elevatedWhite": {
+        "value": "#FFFFFF",
+        "usage": "Floating elements, modals"
+      }
+    },
+
+    "primary": {
+      "sageGreen": {
+        "value": "#7BA17B",
+        "usage": "Primary actions, positive indicators"
+      },
+      "deepSage": {
+        "value": "#5A8A5A",
+        "usage": "Hover/pressed states"
+      },
+      "lightSage": {
+        "value": "#A8CBA8",
+        "usage": "Subtle highlights, progress indicators"
+      }
+    },
+
+    "accent": {
+      "periwinkle": {
+        "value": "#6B7FD7",
+        "usage": "Interactive elements, mood dots, calendar highlights"
+      },
+      "deepBlue": {
+        "value": "#4A5FC1",
+        "usage": "Active states, selected dates"
+      },
+      "coral": {
+        "value": "#E88B6E",
+        "usage": "Future dates, warm accents, gentle alerts"
+      },
+      "salmon": {
+        "value": "#EDA08C",
+        "usage": "Secondary warm accents"
+      },
+      "orchid": {
+        "value": "#D4A5D9",
+        "usage": "Meditation history icons, decorative"
+      },
+      "teal": {
+        "value": "#7AABAB",
+        "usage": "Charts, stress level graphs, data visualization"
+      }
+    },
+
+    "text": {
+      "primary": {
+        "value": "#2D2D2D",
+        "usage": "Main headings, body text"
+      },
+      "secondary": {
+        "value": "#5A5A5A",
+        "usage": "Subheadings, descriptions"
+      },
+      "muted": {
+        "value": "#8B8B8B",
+        "usage": "Timestamps, captions, helper text"
+      },
+      "onDark": {
+        "value": "#FFFFFF",
+        "usage": "Text on dark buttons"
+      },
+      "handwritten": {
+        "value": "#3D3D3D",
+        "usage": "Script/handwritten headings"
+      }
+    },
+
+    "semantic": {
+      "success": "#7BA17B",
+      "warning": "#E8B86E",
+      "error": "#D97B7B",
+      "info": "#6B7FD7"
+    },
+
+    "mood": {
+      "joyful": "#F5D76E",
+      "calm": "#A8CBA8",
+      "drained": "#B8D4B4",
+      "anxious": "#D4A5D9",
+      "sad": "#7AABAB",
+      "energetic": "#E88B6E"
+    }
+  },
+
+  "typography": {
+    "description": "Dual-font system: A warm handwritten script for emotional headings paired with a friendly, rounded sans-serif for readability.",
+    
+    "fontFamilies": {
+      "display": {
+        "name": "Caveat",
+        "fallback": "Kalam, 'Indie Flower', 'Comic Neue', cursive",
+        "usage": "Section headings, emotional prompts, 'How do you really feel today?'",
+        "googleFontsUrl": "https://fonts.google.com/specimen/Caveat",
+        "weight": "500-700",
+        "characteristics": "Warm, handwritten feel without being childish. Flows naturally."
+      },
+      "body": {
+        "name": "Nunito",
+        "fallback": "'DM Sans', 'Plus Jakarta Sans', 'SF Pro Rounded', system-ui",
+        "usage": "Body text, labels, buttons, navigation",
+        "googleFontsUrl": "https://fonts.google.com/specimen/Nunito",
+        "weight": "400-700",
+        "characteristics": "Friendly, rounded terminals. Approachable but professional."
+      },
+      "mono": {
+        "name": "JetBrains Mono",
+        "fallback": "'SF Mono', monospace",
+        "usage": "Data, numbers, timestamps if needed"
+      }
+    },
+
+    "scale": {
+      "displayLarge": {
+        "size": 32,
+        "lineHeight": 1.2,
+        "fontFamily": "display",
+        "weight": "600",
+        "usage": "Hero headings like 'How do you really feel today?'"
+      },
+      "displayMedium": {
+        "size": 26,
+        "lineHeight": 1.25,
+        "fontFamily": "display",
+        "weight": "600",
+        "usage": "Section titles like 'Recommendations for you'"
+      },
+      "displaySmall": {
+        "size": 22,
+        "lineHeight": 1.3,
+        "fontFamily": "display",
+        "weight": "500",
+        "usage": "Card section headings like 'Try today'"
+      },
+      "headingLarge": {
+        "size": 20,
+        "lineHeight": 1.3,
+        "fontFamily": "body",
+        "weight": "600",
+        "usage": "Screen titles, card titles"
+      },
+      "headingMedium": {
+        "size": 17,
+        "lineHeight": 1.35,
+        "fontFamily": "body",
+        "weight": "600",
+        "usage": "Card headers, 'Mood history', 'Stress level'"
+      },
+      "headingSmall": {
+        "size": 15,
+        "lineHeight": 1.4,
+        "fontFamily": "body",
+        "weight": "600",
+        "usage": "List item titles"
+      },
+      "bodyLarge": {
+        "size": 16,
+        "lineHeight": 1.5,
+        "fontFamily": "body",
+        "weight": "400",
+        "usage": "Primary body text, descriptions"
+      },
+      "bodyMedium": {
+        "size": 14,
+        "lineHeight": 1.5,
+        "fontFamily": "body",
+        "weight": "400",
+        "usage": "Secondary text, card descriptions"
+      },
+      "bodySmall": {
+        "size": 12,
+        "lineHeight": 1.5,
+        "fontFamily": "body",
+        "weight": "400",
+        "usage": "Captions, timestamps, helper text"
+      },
+      "label": {
+        "size": 13,
+        "lineHeight": 1.3,
+        "fontFamily": "body",
+        "weight": "500",
+        "usage": "Chip labels, button text, form labels"
+      },
+      "micro": {
+        "size": 11,
+        "lineHeight": 1.3,
+        "fontFamily": "body",
+        "weight": "400",
+        "usage": "Duration labels like '5 minutes'"
+      }
+    }
+  },
+
+  "spacing": {
+    "description": "Generous, breathing layouts. Never cramped. White space is a feature, not a bug.",
+    "scale": {
+      "xxs": 4,
+      "xs": 8,
+      "sm": 12,
+      "md": 16,
+      "lg": 20,
+      "xl": 24,
+      "xxl": 32,
+      "xxxl": 40,
+      "huge": 48
+    },
+    "guidelines": {
+      "screenPadding": 20,
+      "cardPadding": 16,
+      "cardMargin": 12,
+      "sectionGap": 24,
+      "elementGap": 12,
+      "inlineGap": 8
+    }
+  },
+
+  "borderRadius": {
+    "description": "Everything is rounded. Sharp corners feel clinical. Embrace the organic.",
+    "scale": {
+      "sm": 8,
+      "md": 12,
+      "lg": 16,
+      "xl": 20,
+      "xxl": 24,
+      "full": 9999
+    },
+    "usage": {
+      "cards": "xl (20px) - Main content cards",
+      "buttons": "full (pill-shaped) - CTAs and actions",
+      "chips": "full - Mood selectors, tags",
+      "inputs": "lg (16px) - Form fields",
+      "icons": "md (12px) - Icon containers",
+      "avatars": "full - User avatars"
+    }
+  },
+
+  "shadows": {
+    "description": "Soft, diffused shadows that make elements float gently. Never harsh drop shadows.",
+    "elevation": {
+      "none": "none",
+      "subtle": {
+        "shadow": "0 2px 8px rgba(0, 0, 0, 0.04)",
+        "usage": "Subtle lift for secondary elements"
+      },
+      "low": {
+        "shadow": "0 4px 12px rgba(0, 0, 0, 0.06)",
+        "usage": "Standard cards, list items"
+      },
+      "medium": {
+        "shadow": "0 6px 20px rgba(0, 0, 0, 0.08)",
+        "usage": "Elevated cards, modals"
+      },
+      "high": {
+        "shadow": "0 10px 30px rgba(0, 0, 0, 0.1)",
+        "usage": "Floating action buttons, popovers"
+      }
+    }
+  },
+
+  "illustrations": {
+    "description": "Whimsical, hand-drawn mascot characters that accompany users on their wellness journey.",
+    "style": {
+      "aesthetic": "Cute anthropomorphic shapes with simple faces, arms, and legs",
+      "colors": "Match the app palette - sage greens, teals, soft purples",
+      "faces": "Simple dot eyes, small curved smile, blush cheeks optional",
+      "limbs": "Thin stick arms and legs with small rounded hands/feet",
+      "poses": "Dynamic, friendly poses - waving, meditating, stretching, hugging",
+      "outlines": "Thin dark outlines or no outlines, filled shapes"
+    },
+    "characters": {
+      "meditator": {
+        "shape": "Diamond or square with face",
+        "pose": "Cross-legged meditation pose",
+        "color": "Sage green or teal",
+        "usage": "Meditation recommendations, calm states"
+      },
+      "phone": {
+        "shape": "Rounded rectangle phone shape with face",
+        "pose": "Waving, standing confidently",
+        "color": "Sage green",
+        "usage": "Check-in screens, greetings"
+      },
+      "yoga": {
+        "shape": "Blob or organic shape",
+        "pose": "Yoga poses - downward dog, stretch",
+        "color": "Periwinkle blue",
+        "usage": "Exercise, stretching practices"
+      },
+      "flower": {
+        "shape": "Stylized flower/starburst",
+        "pose": "Static decorative",
+        "color": "Orchid pink/purple",
+        "usage": "Meditation history, achievements"
+      }
+    },
+    "usage": {
+      "emptyStates": "Full character illustration with encouraging message",
+      "cards": "Small character as visual anchor (60-80px)",
+      "headers": "Large character as hero element (120-180px)",
+      "inline": "Tiny character icons (24-32px)"
+    }
+  },
+
+  "components": {
+    "header": {
+      "description": "Friendly greeting header with avatar and notification",
+      "structure": {
+        "avatar": {
+          "size": 40,
+          "borderRadius": "full",
+          "border": "2px solid white"
+        },
+        "greeting": {
+          "primary": "Glad to see you again,",
+          "secondary": "[User Name]",
+          "typography": "bodyMedium + headingMedium"
+        },
+        "notificationBell": {
+          "size": 24,
+          "color": "text.primary",
+          "badgeColor": "accent.coral"
+        }
+      },
+      "spacing": {
+        "padding": "md",
+        "avatarToText": "sm",
+        "bellAlignment": "right"
+      }
+    },
+
+    "card": {
+      "description": "Soft, floating content containers",
+      "base": {
+        "background": "surfaces.cardWhite",
+        "borderRadius": "xl (20px)",
+        "padding": "md (16px)",
+        "shadow": "shadows.low"
+      },
+      "variants": {
+        "default": {
+          "background": "#FFFFFF"
+        },
+        "subtle": {
+          "background": "#FAFAF8"
+        },
+        "highlighted": {
+          "background": "linear-gradient(135deg, #EBF4FF, #F5F0FF)",
+          "border": "1px solid rgba(107, 127, 215, 0.1)"
+        }
+      }
+    },
+
+    "moodHistory": {
+      "description": "Weekly mood calendar with colored day indicators",
+      "header": {
+        "title": "Mood history",
+        "typography": "headingMedium",
+        "dropdown": "Week/Month selector"
+      },
+      "calendar": {
+        "dayLabels": ["M", "T", "W", "T", "F", "S", "S"],
+        "dayLabelTypography": "bodySmall",
+        "dayLabelColor": "text.muted"
+      },
+      "dayCircle": {
+        "size": 36,
+        "borderRadius": "full",
+        "typography": "bodyMedium",
+        "states": {
+          "tracked": {
+            "background": "accent.periwinkle",
+            "textColor": "#FFFFFF"
+          },
+          "future": {
+            "background": "accent.coral",
+            "textColor": "#FFFFFF"
+          },
+          "empty": {
+            "background": "transparent",
+            "border": "1px solid text.muted",
+            "textColor": "text.muted"
+          },
+          "today": {
+            "background": "accent.deepBlue",
+            "textColor": "#FFFFFF",
+            "ring": "3px solid rgba(107, 127, 215, 0.3)"
+          }
+        }
+      }
+    },
+
+    "stressLevelCard": {
+      "description": "Line graph showing stress trends over time",
+      "header": {
+        "title": "Stress level",
+        "typography": "headingMedium"
+      },
+      "chart": {
+        "lineColor": "accent.teal",
+        "lineWidth": 2,
+        "dotSize": 6,
+        "gridColor": "rgba(0, 0, 0, 0.05)",
+        "areaFill": "linear-gradient(180deg, rgba(122, 171, 171, 0.2), transparent)"
+      },
+      "axis": {
+        "labels": ["M", "T", "W", "T", "F", "S", "S"],
+        "typography": "micro",
+        "color": "text.muted"
+      },
+      "footer": {
+        "text": "Stress levels are 35% higher than last week",
+        "typography": "bodySmall",
+        "color": "text.secondary"
+      }
+    },
+
+    "healthDiary": {
+      "description": "Dot matrix showing diary entry frequency",
+      "header": {
+        "title": "Health diary",
+        "typography": "headingMedium"
+      },
+      "dotMatrix": {
+        "dotSize": 10,
+        "dotGap": 4,
+        "columns": 7,
+        "colors": {
+          "active": "accent.periwinkle",
+          "inactive": "rgba(107, 127, 215, 0.2)"
+        }
+      },
+      "footer": {
+        "text": "Your entries help you see your progress",
+        "typography": "bodySmall",
+        "color": "text.secondary"
+      }
+    },
+
+    "sectionHeader": {
+      "description": "Handwritten script section titles",
+      "typography": "displayMedium",
+      "fontFamily": "display (Caveat)",
+      "color": "text.handwritten",
+      "marginBottom": "lg"
+    },
+
+    "recommendationCard": {
+      "description": "Featured recommendation with illustration",
+      "layout": "horizontal",
+      "illustration": {
+        "size": 80,
+        "position": "left"
+      },
+      "content": {
+        "title": {
+          "typography": "headingMedium",
+          "color": "text.primary"
+        },
+        "description": {
+          "typography": "bodySmall",
+          "color": "text.secondary",
+          "maxLines": 2
+        },
+        "duration": {
+          "typography": "micro",
+          "color": "accent.teal"
+        }
+      },
+      "padding": "md",
+      "background": "surfaces.cardWhite",
+      "borderRadius": "xl"
+    },
+
+    "ctaButton": {
+      "description": "Primary call-to-action button",
+      "base": {
+        "background": "text.primary (#2D2D2D)",
+        "textColor": "#FFFFFF",
+        "typography": "label",
+        "fontWeight": "600",
+        "borderRadius": "full",
+        "paddingVertical": "lg (20px)",
+        "paddingHorizontal": "xxl (32px)"
+      },
+      "states": {
+        "default": {
+          "background": "#2D2D2D"
+        },
+        "pressed": {
+          "background": "#1A1A1A",
+          "transform": "scale(0.98)"
+        },
+        "disabled": {
+          "background": "#9CA3AF",
+          "opacity": 0.6
+        }
+      },
+      "fullWidth": true
+    },
+
+    "navigationHeader": {
+      "description": "Screen header with back button and title",
+      "height": 56,
+      "backButton": {
+        "icon": "arrow-left",
+        "size": 24,
+        "hitArea": 44
+      },
+      "title": {
+        "typography": "headingLarge",
+        "alignment": "center"
+      },
+      "menuButton": {
+        "icon": "more-vertical (3 dots)",
+        "size": 24,
+        "hitArea": 44
+      },
+      "background": "transparent or inherit"
+    },
+
+    "meditationCard": {
+      "description": "Featured meditation with illustration",
+      "layout": {
+        "direction": "horizontal",
+        "alignment": "center"
+      },
+      "illustration": {
+        "size": 64,
+        "marginRight": "md"
+      },
+      "content": {
+        "title": {
+          "typography": "headingSmall",
+          "color": "text.primary"
+        },
+        "description": {
+          "typography": "bodySmall",
+          "color": "text.secondary",
+          "marginTop": "xxs"
+        },
+        "duration": {
+          "typography": "micro",
+          "color": "accent.teal",
+          "marginTop": "xs"
+        }
+      },
+      "background": "surfaces.cardWhite",
+      "padding": "md",
+      "borderRadius": "xl"
+    },
+
+    "practiceListItem": {
+      "description": "List item for practices/categories",
+      "layout": {
+        "direction": "horizontal",
+        "justifyContent": "space-between",
+        "alignItems": "center"
+      },
+      "title": {
+        "typography": "bodyLarge",
+        "color": "text.primary"
+      },
+      "arrow": {
+        "icon": "arrow-right",
+        "size": 20,
+        "color": "text.muted"
+      },
+      "paddingVertical": "md",
+      "borderBottom": "1px solid rgba(0, 0, 0, 0.05)"
+    },
+
+    "historyItem": {
+      "description": "Meditation history list item",
+      "layout": {
+        "direction": "horizontal",
+        "alignItems": "center"
+      },
+      "icon": {
+        "type": "flower/starburst illustration",
+        "size": 40,
+        "marginRight": "md"
+      },
+      "content": {
+        "title": {
+          "typography": "bodyLarge",
+          "color": "text.primary"
+        },
+        "date": {
+          "typography": "bodySmall",
+          "color": "text.muted"
+        }
+      },
+      "paddingVertical": "sm"
+    },
+
+    "moodCheckIn": {
+      "description": "Full-screen mood check-in experience",
+      "background": "backgrounds.sage",
+      "header": {
+        "backButton": true,
+        "confirmButton": {
+          "icon": "check",
+          "size": 24,
+          "background": "primary.sageGreen",
+          "borderRadius": "full"
+        }
+      },
+      "prompt": {
+        "text": "How do you really feel today?",
+        "typography": "displayLarge",
+        "fontFamily": "display (Caveat)",
+        "textAlign": "center",
+        "marginBottom": "xl"
+      },
+      "illustration": {
+        "size": 180,
+        "position": "center",
+        "marginBottom": "xxl"
+      },
+      "moodSelector": {
+        "layout": "horizontal-scroll",
+        "gap": "sm"
+      }
+    },
+
+    "moodChip": {
+      "description": "Selectable mood option pill",
+      "base": {
+        "paddingVertical": "xs",
+        "paddingHorizontal": "lg",
+        "borderRadius": "full",
+        "typography": "label",
+        "border": "none"
+      },
+      "states": {
+        "unselected": {
+          "background": "transparent",
+          "textColor": "text.secondary"
+        },
+        "selected": {
+          "background": "transparent",
+          "textColor": "text.primary",
+          "ring": "2px solid primary.deepSage",
+          "fontWeight": "600"
+        }
+      }
+    },
+
+    "noteButton": {
+      "description": "Add note call-to-action",
+      "text": "Add note",
+      "extends": "ctaButton",
+      "icon": "none",
+      "fullWidth": true,
+      "marginTop": "lg"
+    },
+
+    "avatar": {
+      "description": "User profile avatar",
+      "sizes": {
+        "sm": 32,
+        "md": 40,
+        "lg": 56,
+        "xl": 80
+      },
+      "borderRadius": "full",
+      "border": "2px solid #FFFFFF",
+      "fallback": {
+        "background": "accent.periwinkle",
+        "textColor": "#FFFFFF",
+        "typography": "headingSmall"
+      }
+    },
+
+    "dropdown": {
+      "description": "Select dropdown like Week/Month selector",
+      "trigger": {
+        "typography": "bodySmall",
+        "color": "text.secondary",
+        "icon": "chevron-down",
+        "iconSize": 16,
+        "padding": "xs sm"
+      },
+      "menu": {
+        "background": "surfaces.cardWhite",
+        "borderRadius": "lg",
+        "shadow": "shadows.medium",
+        "padding": "xs"
+      }
+    },
+
+    "tabBar": {
+      "description": "Bottom navigation tab bar",
+      "background": "#FFFFFF",
+      "height": 72,
+      "borderTop": "none",
+      "shadow": "0 -4px 20px rgba(0, 0, 0, 0.05)",
+      "item": {
+        "icon": {
+          "size": 24,
+          "activeColor": "primary.sageGreen",
+          "inactiveColor": "text.muted"
+        },
+        "label": {
+          "typography": "micro",
+          "activeColor": "primary.sageGreen",
+          "inactiveColor": "text.muted"
+        }
+      }
+    },
+
+    "emptyState": {
+      "description": "Empty state with illustration and message",
+      "illustration": {
+        "size": 120,
+        "marginBottom": "lg"
+      },
+      "title": {
+        "typography": "displaySmall",
+        "fontFamily": "display",
+        "color": "text.primary",
+        "textAlign": "center"
+      },
+      "description": {
+        "typography": "bodyMedium",
+        "color": "text.secondary",
+        "textAlign": "center",
+        "maxWidth": 280,
+        "marginTop": "sm"
+      },
+      "action": {
+        "extends": "ctaButton",
+        "marginTop": "xl"
+      }
+    },
+
+    "formInput": {
+      "description": "Text input field",
+      "background": "surfaces.cardCream",
+      "borderRadius": "lg",
+      "border": "1px solid transparent",
+      "padding": "md",
+      "typography": "bodyLarge",
+      "states": {
+        "default": {
+          "borderColor": "transparent"
+        },
+        "focused": {
+          "borderColor": "primary.sageGreen",
+          "shadow": "0 0 0 3px rgba(123, 161, 123, 0.15)"
+        },
+        "error": {
+          "borderColor": "semantic.error"
+        }
+      },
+      "placeholder": {
+        "color": "text.muted"
+      }
+    },
+
+    "progressRing": {
+      "description": "Circular progress indicator",
+      "sizes": {
+        "sm": 40,
+        "md": 60,
+        "lg": 100
+      },
+      "strokeWidth": {
+        "sm": 4,
+        "md": 6,
+        "lg": 8
+      },
+      "trackColor": "rgba(123, 161, 123, 0.2)",
+      "progressColor": "primary.sageGreen",
+      "centerText": {
+        "typography": "headingSmall"
+      }
+    }
+  },
+
+  "animations": {
+    "description": "Gentle, organic animations that feel natural and calming",
+    "timing": {
+      "quick": "150ms",
+      "normal": "250ms",
+      "slow": "400ms",
+      "verySlow": "600ms"
+    },
+    "easing": {
+      "default": "cubic-bezier(0.4, 0, 0.2, 1)",
+      "bounce": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      "smooth": "cubic-bezier(0.4, 0, 0.2, 1)"
+    },
+    "patterns": {
+      "fadeIn": {
+        "from": { "opacity": 0 },
+        "to": { "opacity": 1 },
+        "duration": "normal"
+      },
+      "slideUp": {
+        "from": { "opacity": 0, "transform": "translateY(20px)" },
+        "to": { "opacity": 1, "transform": "translateY(0)" },
+        "duration": "normal"
+      },
+      "scaleIn": {
+        "from": { "opacity": 0, "transform": "scale(0.95)" },
+        "to": { "opacity": 1, "transform": "scale(1)" },
+        "duration": "normal"
+      },
+      "gentleBounce": {
+        "keyframes": "0%{transform:scale(1)} 50%{transform:scale(1.05)} 100%{transform:scale(1)}",
+        "duration": "slow"
+      }
+    },
+    "stagger": {
+      "cards": "50ms",
+      "listItems": "30ms"
+    }
+  },
+
+  "layout": {
+    "description": "Screen and content layout guidelines",
+    "safeAreas": {
+      "top": "statusBarHeight + 8",
+      "bottom": "homeIndicator + 16",
+      "horizontal": 20
+    },
+    "maxContentWidth": 428,
+    "gridColumns": 2,
+    "gridGap": 12,
+    "scrollPadding": {
+      "top": 16,
+      "bottom": 100
+    }
+  },
+
+  "icons": {
+    "description": "Icon style guidelines",
+    "style": "Rounded, friendly line icons",
+    "strokeWidth": 1.5,
+    "recommended": ["Lucide", "Phosphor", "Tabler Icons"],
+    "sizes": {
+      "xs": 16,
+      "sm": 20,
+      "md": 24,
+      "lg": 32
+    },
+    "colors": {
+      "default": "text.secondary",
+      "active": "primary.sageGreen",
+      "muted": "text.muted"
+    }
+  },
+
+  "accessibility": {
+    "minimumTouchTarget": 44,
+    "colorContrast": {
+      "normal": "4.5:1",
+      "large": "3:1"
+    },
+    "focusRing": {
+      "width": 3,
+      "color": "primary.sageGreen",
+      "offset": 2
+    }
+  },
+
+  "screenExamples": {
+    "dashboard": {
+      "background": "backgrounds.lavender",
+      "sections": [
+        "header (avatar, greeting, notification)",
+        "moodHistory card",
+        "2-column grid (stressLevel, healthDiary)",
+        "sectionHeader (handwritten)",
+        "recommendationCard",
+        "ctaButton"
+      ]
+    },
+    "meditation": {
+      "background": "backgrounds.cream",
+      "sections": [
+        "navigationHeader",
+        "sectionHeader (Try today)",
+        "meditationCard",
+        "sectionHeader (Practices)",
+        "practiceListItems",
+        "sectionHeader (Meditation history)",
+        "historyItems"
+      ]
+    },
+    "moodCheckIn": {
+      "background": "backgrounds.sage",
+      "sections": [
+        "navigationHeader (back + confirm)",
+        "prompt (handwritten question)",
+        "illustration (large centered)",
+        "moodChips (horizontal scroll)",
+        "noteButton"
+      ]
+    }
+  },
+
+  "aiInstructions": {
+    "summary": "When implementing this design system, prioritize warmth and approachability over clinical precision. Every element should feel hand-crafted and friendly.",
+    "doThis": [
+      "Use generous padding and whitespace—let elements breathe",
+      "Apply very rounded corners (16-24px) to all containers",
+      "Use the handwritten Caveat font for emotional headings",
+      "Include cute illustrated characters for visual warmth",
+      "Apply soft, diffused shadows (never harsh)",
+      "Use muted, nature-inspired colors",
+      "Make buttons pill-shaped with dark backgrounds",
+      "Create gentle animations and transitions",
+      "Design for calm, not urgency"
+    ],
+    "avoidThis": [
+      "Sharp corners or rectangular containers",
+      "High-contrast or vibrant neon colors",
+      "Clinical, medical-looking interfaces",
+      "Dense, cramped layouts",
+      "Harsh shadows or strong borders",
+      "Generic sans-serif fonts only",
+      "Static, lifeless interfaces",
+      "Aggressive notifications or alerts"
+    ],
+    "colorCombinations": [
+      "Lavender background (#C5BFDC) + white cards",
+      "Sage background (#B8D4B4) + sage green accents",
+      "Cream background (#F7F6F2) + periwinkle accents",
+      "Dark buttons (#2D2D2D) + white text"
+    ],
+    "typographyPairings": [
+      "Caveat (headings) + Nunito (body)",
+      "Handwritten for emotional, decorative",
+      "Clean sans-serif for readable content"
+    ]
+  }
+}

@@ -1,25 +1,92 @@
-import { getThemeTokens, tokens } from '@/constants/theme';
-import { useRouter } from 'expo-router';
-import React from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+/**
+ * Profile Tab - Settings and User Information
+ * 
+ * Features:
+ * - Theme preferences
+ * - Data & Privacy settings
+ * - Health stats overview
+ * - App info
+ */
+
+import React, { useState, useEffect } from 'react';
+import { 
+  Alert, 
+  ScrollView, 
+  StyleSheet, 
+  Text, 
+  TouchableOpacity, 
+  View 
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+
 import { useThemePreference } from '@/hooks/use-theme-preference';
+import { 
+  getThemeTokens, 
+  getScreenBackground,
+  spacing,
+  borderRadius,
+  shadows,
+} from '@/constants/theme';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { 
+  getBPReadings, 
+  getMedications, 
+  getJournalEntries,
+} from '@/services/db';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { colorScheme, preference, setPreference } = useThemePreference();
   const tokens = getThemeTokens(colorScheme);
+  const backgroundColor = getScreenBackground('profile', colorScheme);
+
+  const [stats, setStats] = useState({
+    bpReadings: 0,
+    medications: 0,
+    journalEntries: 0,
+    daysTracked: 0,
+  });
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      const [bp, meds, journals] = await Promise.all([
+        getBPReadings(),
+        getMedications(),
+        getJournalEntries(),
+      ]);
+      
+      // Calculate days tracked (unique days with any entry)
+      const allDates = new Set<string>();
+      journals.forEach((j: any) => {
+        allDates.add(new Date(j.entry_date).toDateString());
+      });
+      
+      setStats({
+        bpReadings: bp.length,
+        medications: meds.length,
+        journalEntries: journals.length,
+        daysTracked: allDates.size,
+      });
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
+  };
 
   const handleExportData = () => {
     Alert.alert(
-      'Coming soon',
-      'Data export (CSV/JSON) will be available in a future version. For now, you can view your history in the app.',
+      'Coming Soon',
+      'Data export (CSV/JSON) will be available in a future version.',
     );
   };
 
   const handleBiometricSettings = () => {
     Alert.alert(
-      'Coming soon',
+      'Coming Soon',
       'Biometric lock will let you secure the app with Face ID or fingerprint in a future update.',
     );
   };
@@ -27,174 +94,193 @@ export default function ProfileScreen() {
   const handleAbout = () => {
     Alert.alert(
       'About',
-      'Version 1.0.0\nBuilt for Gnaneswar Lopinti.\nThis app is not a medical device and does not provide medical advice.',
+      'Version 1.0.0\nBuilt with care for your health journey.\n\nThis app is not a medical device and does not provide medical advice.',
     );
   };
 
+  const themeOptions = [
+    { id: 'system', label: 'System' },
+    { id: 'light', label: 'Light' },
+    { id: 'dark', label: 'Dark' },
+  ] as const;
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: tokens.colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
-      <ScrollView contentContainerStyle={[styles.content]}>
+    <SafeAreaView 
+      style={[styles.container, { backgroundColor }]} 
+      edges={['top']}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
         <View style={styles.header}>
-          <Text style={[styles.title, { color: tokens.colors.text }]}>Profile</Text>
-          <Text style={[styles.subtitle, { color: tokens.colors.textMuted }]}>
-            Manage your health data and settings
+          <Text style={[styles.title, { color: tokens.colors.textHandwritten }]}>
+            Profile
+          </Text>
+          <Text style={[styles.subtitle, { color: tokens.colors.textSecondary }]}>
+            Manage your settings
           </Text>
         </View>
 
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: tokens.colors.text }]}>
-            Appearance
-          </Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <TouchableOpacity
-              style={[
-                styles.chip,
-                preference === 'system' && { backgroundColor: tokens.colors.primary },
-              ]}
-              onPress={() => setPreference('system')}
-            >
-              <Text
-                style={[
-                  styles.chipLabel,
-                  preference === 'system'
-                    ? { color: tokens.colors.background }
-                    : { color: tokens.colors.textMuted },
-                ]}
-              >
-                System
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.chip,
-                preference === 'light' && { backgroundColor: tokens.colors.primary },
-              ]}
-              onPress={() => setPreference('light')}
-            >
-              <Text
-                style={[
-                  styles.chipLabel,
-                  preference === 'light'
-                    ? { color: tokens.colors.background }
-                    : { color: tokens.colors.textMuted },
-                ]}
-              >
-                Light
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.chip,
-                preference === 'dark' && { backgroundColor: tokens.colors.primary },
-              ]}
-              onPress={() => setPreference('dark')}
-            >
-              <Text
-                style={[
-                  styles.chipLabel,
-                  preference === 'dark'
-                    ? { color: tokens.colors.background }
-                    : { color: tokens.colors.textMuted },
-                ]}
-              >
-                Dark
-              </Text>
-            </TouchableOpacity>
+        {/* User Card */}
+        <View style={[styles.userCard, { backgroundColor: tokens.colors.card }, shadows.low]}>
+          <View style={[styles.userAvatar, { backgroundColor: tokens.colors.primary }]}>
+            <IconSymbol name="person.fill" size={32} color="#FFFFFF" />
+          </View>
+          <View style={styles.userInfo}>
+            <Text style={[styles.userName, { color: tokens.colors.text }]}>
+              User
+            </Text>
+            <Text style={[styles.userEmail, { color: tokens.colors.textMuted }]}>
+              Your health journey
+            </Text>
           </View>
         </View>
 
+        {/* Appearance Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: tokens.colors.text }]}>
+          <Text style={[styles.sectionTitle, { color: tokens.colors.textHandwritten }]}>
+            Appearance
+          </Text>
+          <View style={styles.themeOptions}>
+            {themeOptions.map((option) => (
+              <TouchableOpacity
+                key={option.id}
+                style={[
+                  styles.themeChip,
+                  { borderColor: tokens.colors.border },
+                  preference === option.id && { 
+                    backgroundColor: tokens.colors.primary,
+                    borderColor: tokens.colors.primary,
+                  },
+                ]}
+                onPress={() => setPreference(option.id)}
+              >
+                <Text
+                  style={[
+                    styles.themeChipText,
+                    { color: tokens.colors.textMuted },
+                    preference === option.id && { color: '#FFFFFF' },
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Stats Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: tokens.colors.textHandwritten }]}>
+            Your Stats
+          </Text>
+          <View style={styles.statsGrid}>
+            <View style={[styles.statCard, { backgroundColor: tokens.colors.card }, shadows.subtle]}>
+              <Text style={[styles.statNumber, { color: tokens.colors.primary }]}>
+                {stats.bpReadings}
+              </Text>
+              <Text style={[styles.statLabel, { color: tokens.colors.textMuted }]}>
+                BP Readings
+              </Text>
+            </View>
+            <View style={[styles.statCard, { backgroundColor: tokens.colors.card }, shadows.subtle]}>
+              <Text style={[styles.statNumber, { color: tokens.colors.primary }]}>
+                {stats.medications}
+              </Text>
+              <Text style={[styles.statLabel, { color: tokens.colors.textMuted }]}>
+                Medications
+              </Text>
+            </View>
+            <View style={[styles.statCard, { backgroundColor: tokens.colors.card }, shadows.subtle]}>
+              <Text style={[styles.statNumber, { color: tokens.colors.primary }]}>
+                {stats.journalEntries}
+              </Text>
+              <Text style={[styles.statLabel, { color: tokens.colors.textMuted }]}>
+                Journal Entries
+              </Text>
+            </View>
+            <View style={[styles.statCard, { backgroundColor: tokens.colors.card }, shadows.subtle]}>
+              <Text style={[styles.statNumber, { color: tokens.colors.primary }]}>
+                {stats.daysTracked}
+              </Text>
+              <Text style={[styles.statLabel, { color: tokens.colors.textMuted }]}>
+                Days Tracked
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Data & Privacy Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: tokens.colors.textHandwritten }]}>
             Data & Privacy
           </Text>
           
-          <TouchableOpacity style={[styles.settingItem, { backgroundColor: tokens.colors.card }]} onPress={handleExportData}>
+          <TouchableOpacity 
+            style={[styles.settingItem, { backgroundColor: tokens.colors.card }, shadows.subtle]} 
+            onPress={handleExportData}
+          >
             <View style={styles.settingContent}>
-              <Text style={[styles.settingTitle, { color: tokens.colors.text }]}>Export Data</Text>
-              <Text style={[styles.settingSubtitle, { color: tokens.colors.textMuted }]}>
-                Download your health data as CSV/JSON
-              </Text>
+              <IconSymbol name="square.and.arrow.up" size={20} color={tokens.colors.primary} />
+              <View style={styles.settingText}>
+                <Text style={[styles.settingTitle, { color: tokens.colors.text }]}>
+                  Export Data
+                </Text>
+                <Text style={[styles.settingSubtitle, { color: tokens.colors.textMuted }]}>
+                  Download your health data
+                </Text>
+              </View>
             </View>
-            <Text style={[styles.settingArrow, { color: tokens.colors.textMuted }]}>›</Text>
+            <IconSymbol name="chevron.right" size={18} color={tokens.colors.textMuted} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.settingItem, { backgroundColor: tokens.colors.card }]} onPress={handleBiometricSettings}>
+          <TouchableOpacity 
+            style={[styles.settingItem, { backgroundColor: tokens.colors.card }, shadows.subtle]} 
+            onPress={handleBiometricSettings}
+          >
             <View style={styles.settingContent}>
-              <Text style={[styles.settingTitle, { color: tokens.colors.text }]}>Biometric Lock</Text>
-              <Text style={[styles.settingSubtitle, { color: tokens.colors.textMuted }]}>
-                Secure your app with fingerprint/face ID
-              </Text>
+              <IconSymbol name="faceid" size={20} color={tokens.colors.primary} />
+              <View style={styles.settingText}>
+                <Text style={[styles.settingTitle, { color: tokens.colors.text }]}>
+                  Biometric Lock
+                </Text>
+                <Text style={[styles.settingSubtitle, { color: tokens.colors.textMuted }]}>
+                  Secure with fingerprint/Face ID
+                </Text>
+              </View>
             </View>
-            <Text style={styles.settingArrow}>›</Text>
+            <IconSymbol name="chevron.right" size={18} color={tokens.colors.textMuted} />
           </TouchableOpacity>
         </View>
 
+        {/* App Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: tokens.colors.text }]}>
+          <Text style={[styles.sectionTitle, { color: tokens.colors.textHandwritten }]}>
             App
           </Text>
           
-          <TouchableOpacity style={[styles.settingItem, { backgroundColor: tokens.colors.card }]} onPress={handleAbout}>
+          <TouchableOpacity 
+            style={[styles.settingItem, { backgroundColor: tokens.colors.card }, shadows.subtle]} 
+            onPress={handleAbout}
+          >
             <View style={styles.settingContent}>
-              <Text style={[styles.settingTitle, { color: tokens.colors.text }]}>About</Text>
-              <Text style={[styles.settingSubtitle, { color: tokens.colors.textMuted }]}>
-                Version 1.0.0 • Built for Gnaneswar Lopinti
-              </Text>
+              <IconSymbol name="info.circle" size={20} color={tokens.colors.primary} />
+              <View style={styles.settingText}>
+                <Text style={[styles.settingTitle, { color: tokens.colors.text }]}>
+                  About
+                </Text>
+                <Text style={[styles.settingSubtitle, { color: tokens.colors.textMuted }]}>
+                  Version 1.0.0
+                </Text>
+              </View>
             </View>
-            <Text style={styles.settingArrow}>›</Text>
+            <IconSymbol name="chevron.right" size={18} color={tokens.colors.textMuted} />
           </TouchableOpacity>
         </View>
 
-        <View style={styles.statsSection}>
-          <Text style={[styles.sectionTitle, { color: tokens.colors.text }]}>
-            Health Stats
-          </Text>
-          <View style={styles.statsGrid}>
-            <View style={[styles.statCard, { backgroundColor: tokens.colors.card }]}>
-              <Text style={[styles.statNumber, { color: tokens.colors.primary }]}>0</Text>
-              <Text style={[styles.statLabel, { color: tokens.colors.textMuted }]}>BP Readings</Text>
-            </View>
-            <View style={[styles.statCard, { backgroundColor: tokens.colors.card }]}>
-              <Text style={[styles.statNumber, { color: tokens.colors.primary }]}>0</Text>
-              <Text style={[styles.statLabel, { color: tokens.colors.textMuted }]}>Medications</Text>
-            </View>
-            <View style={[styles.statCard, { backgroundColor: tokens.colors.card }]}>
-              <Text style={[styles.statNumber, { color: tokens.colors.primary }]}>0</Text>
-              <Text style={[styles.statLabel, { color: tokens.colors.textMuted }]}>Journal Entries</Text>
-            </View>
-            <View style={[styles.statCard, { backgroundColor: tokens.colors.card }]}>
-              <Text style={[styles.statNumber, { color: tokens.colors.primary }]}>0</Text>
-              <Text style={[styles.statLabel, { color: tokens.colors.textMuted }]}>Days Tracked</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: tokens.colors.text }]}>
-            Coming Soon
-          </Text>
-          <View style={[styles.settingItem, { backgroundColor: tokens.colors.card }]}>
-            <View style={styles.settingContent}>
-              <Text style={[styles.settingTitle, { color: tokens.colors.text }]}>
-                Analytics & Trends
-              </Text>
-              <Text style={[styles.settingSubtitle, { color: tokens.colors.textMuted }]}>
-                View charts for blood pressure, migraines, mood, and more.
-              </Text>
-            </View>
-          </View>
-          <View style={[styles.settingItem, { backgroundColor: tokens.colors.card }]}>
-            <View style={styles.settingContent}>
-              <Text style={[styles.settingTitle, { color: tokens.colors.text }]}>
-                Reminders
-              </Text>
-              <Text style={[styles.settingSubtitle, { color: tokens.colors.textMuted }]}>
-                Get gentle reminders for medications, supplements, and check-ins.
-              </Text>
-            </View>
-          </View>
-        </View>
-
+        {/* Disclaimer */}
         <Text style={[styles.disclaimer, { color: tokens.colors.textMuted }]}>
           This app helps you track your health data but cannot diagnose, treat, or prevent any
           disease. Always consult a healthcare professional with any concerns.
@@ -207,102 +293,124 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: tokens.colors.bg,
   },
   content: {
-    padding: tokens.spacing.lg,
+    padding: spacing.lg,
+    paddingBottom: spacing.huge,
   },
   header: {
-    marginBottom: tokens.spacing.xl,
+    marginBottom: spacing.xl,
   },
   title: {
-    fontSize: tokens.typography.h1,
-    fontWeight: '700',
-    color: tokens.colors.text,
-    marginBottom: tokens.spacing.xs,
+    fontSize: 32,
+    fontFamily: 'Caveat-SemiBold',
+    marginBottom: spacing.xxs,
   },
   subtitle: {
-    fontSize: tokens.typography.body,
-    color: tokens.colors.textMuted,
+    fontSize: 14,
+    fontFamily: 'Nunito-Regular',
   },
-  section: {
-    marginBottom: tokens.spacing.xl,
-  },
-  sectionTitle: {
-    fontSize: tokens.typography.h2,
-    fontWeight: '600',
-    color: tokens.colors.text,
-    marginBottom: tokens.spacing.md,
-  },
-  settingItem: {
+  userCard: {
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: tokens.colors.card,
-    borderRadius: tokens.borderRadius.md,
-    padding: tokens.spacing.md,
-    marginBottom: tokens.spacing.sm,
-    ...tokens.shadows.sm,
+    gap: spacing.md,
+    marginBottom: spacing.xl,
   },
-  settingContent: {
+  userAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  userInfo: {
     flex: 1,
   },
-  settingTitle: {
-    fontSize: tokens.typography.body,
-    fontWeight: '500',
-    color: tokens.colors.text,
-    marginBottom: tokens.spacing.xs,
-  },
-  settingSubtitle: {
-    fontSize: tokens.typography.caption,
-    color: tokens.colors.textMuted,
-  },
-  settingArrow: {
+  userName: {
     fontSize: 20,
-    color: tokens.colors.textMuted,
-    marginLeft: tokens.spacing.sm,
+    fontFamily: 'Nunito-Bold',
+    marginBottom: spacing.xxs,
   },
-  statsSection: {
-    marginBottom: tokens.spacing.xl,
+  userEmail: {
+    fontSize: 14,
+    fontFamily: 'Nunito-Regular',
+  },
+  section: {
+    marginBottom: spacing.xl,
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontFamily: 'Caveat-SemiBold',
+    marginBottom: spacing.md,
+  },
+  themeOptions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  themeChip: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+  },
+  themeChipText: {
+    fontSize: 14,
+    fontFamily: 'Nunito-SemiBold',
   },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: tokens.spacing.md,
+    gap: spacing.sm,
   },
   statCard: {
-    backgroundColor: tokens.colors.card,
-    borderRadius: tokens.borderRadius.md,
-    padding: tokens.spacing.md,
+    width: '48%',
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
     alignItems: 'center',
-    minWidth: '45%',
-    flex: 1,
-    ...tokens.shadows.sm,
   },
   statNumber: {
-    fontSize: tokens.typography.h1,
-    fontWeight: '700',
-    color: tokens.colors.primary,
-    marginBottom: tokens.spacing.xs,
+    fontSize: 28,
+    fontFamily: 'Nunito-Bold',
+    marginBottom: spacing.xxs,
   },
   statLabel: {
-    fontSize: tokens.typography.small,
-    color: tokens.colors.textMuted,
+    fontSize: 12,
+    fontFamily: 'Nunito-Regular',
     textAlign: 'center',
   },
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
+  settingItem: {
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
   },
-  chipLabel: {
-    fontSize: tokens.typography.small,
-    fontWeight: '500',
+  settingContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    flex: 1,
+  },
+  settingText: {
+    flex: 1,
+  },
+  settingTitle: {
+    fontSize: 15,
+    fontFamily: 'Nunito-SemiBold',
+    marginBottom: 2,
+  },
+  settingSubtitle: {
+    fontSize: 13,
+    fontFamily: 'Nunito-Regular',
   },
   disclaimer: {
-    marginTop: tokens.spacing.lg,
-    fontSize: tokens.typography.caption,
-    color: tokens.colors.textMuted,
+    fontSize: 12,
+    fontFamily: 'Nunito-Regular',
+    lineHeight: 18,
+    textAlign: 'center',
+    marginTop: spacing.lg,
   },
 });
