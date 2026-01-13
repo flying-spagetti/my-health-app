@@ -96,6 +96,7 @@ async function scheduleDoseReminders(
     const notificationId = `${parentType}-${parentId}-${scheduleId}-${dateStr}`;
     
     try {
+      const triggerDate = new Date(scheduledTime);
       await Notifications.scheduleNotificationAsync({
         identifier: notificationId,
         content: {
@@ -108,9 +109,7 @@ async function scheduleDoseReminders(
             scheduleId,
           },
         },
-        trigger: {
-          date: scheduledTime,
-        },
+        trigger: triggerDate,
       });
     } catch (error) {
       console.error(`Error scheduling notification ${notificationId}:`, error);
@@ -209,9 +208,7 @@ async function scheduleMeditationReminders() {
             type: 'meditation',
           },
         },
-        trigger: {
-          date: reminderDate.getTime(),
-        },
+        trigger: reminderDate,
       });
     } catch (error) {
       console.error(`Error scheduling meditation reminder:`, error);
@@ -341,6 +338,7 @@ export async function rescheduleAllReminders(force: boolean = false) {
     await cleanupExpiredNotifications();
     
     // Check if rescheduling is actually needed (unless forced)
+    let shouldReschedule = force;
     if (!force) {
       const needsReschedule = await needsRescheduling();
       if (!needsReschedule) {
@@ -348,10 +346,11 @@ export async function rescheduleAllReminders(force: boolean = false) {
         isScheduling = false;
         return;
       }
+      shouldReschedule = true;
     }
     
-    // Only cancel and reschedule if forced or if we detected missing notifications
-    if (force) {
+    // Cancel and reschedule if needed (to avoid duplicates)
+    if (shouldReschedule) {
       await cancelAllNotifications();
       // Small delay to ensure cancellation is processed
       await new Promise(resolve => setTimeout(resolve, 100));
