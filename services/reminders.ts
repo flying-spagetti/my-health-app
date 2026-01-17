@@ -109,7 +109,7 @@ async function scheduleDoseReminders(
             scheduleId,
           },
         },
-        trigger: triggerDate,
+        trigger: { type: 'date', date: triggerDate },
       });
     } catch (error) {
       console.error(`Error scheduling notification ${notificationId}:`, error);
@@ -140,9 +140,7 @@ async function scheduleAppointmentReminders() {
               appointmentId: apt.id,
             },
           },
-          trigger: {
-            date: reminderDate,
-          },
+          trigger: { type: 'date', date: reminderDate },
         });
       } catch (error) {
         console.error(`Error scheduling appointment reminder:`, error);
@@ -164,9 +162,7 @@ async function scheduleAppointmentReminders() {
               appointmentId: apt.id,
             },
           },
-          trigger: {
-            date: hourReminder,
-          },
+          trigger: { type: 'date', date: hourReminder },
         });
       } catch (error) {
         console.error(`Error scheduling hour reminder:`, error);
@@ -208,7 +204,7 @@ async function scheduleMeditationReminders() {
             type: 'meditation',
           },
         },
-        trigger: reminderDate,
+        trigger: { type: 'date', date: reminderDate },
       });
     } catch (error) {
       console.error(`Error scheduling meditation reminder:`, error);

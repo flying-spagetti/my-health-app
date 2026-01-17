@@ -204,6 +204,8 @@ export function initDb() {
         goals_achieved TEXT,
         challenges TEXT,
         note TEXT,
+        photo_uri TEXT,
+        photo_asset_id TEXT,
         tags TEXT,
         created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
       );
@@ -279,6 +281,19 @@ export function initDb() {
         id TEXT PRIMARY KEY,
         last_sync INTEGER,
         sync_status TEXT DEFAULT 'pending',
+        created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
+      );
+    `);
+
+    // AILY private blog entries (simplified journal with photo + letter)
+    db.execSync(`
+      CREATE TABLE IF NOT EXISTS aily_blogs (
+        id TEXT PRIMARY KEY,
+        user_id TEXT DEFAULT 'local-user',
+        entry_date INTEGER NOT NULL,
+        photo_uri TEXT,
+        photo_asset_id TEXT,
+        letter TEXT,
         created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
       );
     `);
@@ -373,6 +388,8 @@ export function initDb() {
           { name: 'gratitude', type: 'TEXT' },
           { name: 'goals_achieved', type: 'TEXT' },
           { name: 'challenges', type: 'TEXT' },
+          { name: 'photo_uri', type: 'TEXT' },
+          { name: 'photo_asset_id', type: 'TEXT' },
         ];
         
         for (const col of newColumns) {
@@ -643,6 +660,8 @@ export function saveJournalEntry(entry: {
   goals_achieved?: string;
   challenges?: string;
   note?: string;
+  photo_uri?: string;
+  photo_asset_id?: string | null;
   tags?: string[];
   entry_date?: number;
 }): Promise<void> {
@@ -657,8 +676,9 @@ export function saveJournalEntry(entry: {
           id, user_id, entry_date, mood, mood_intensity, energy_level, stress_level,
           sleep_quality, sleep_hours, physical_symptoms, social_activity,
           exercise_duration, exercise_type, nutrition_quality, hydration_glasses,
-          weather, location, gratitude, goals_achieved, challenges, note, tags
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          weather, location, gratitude, goals_achieved, challenges, note,
+          photo_uri, photo_asset_id, tags
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id,
           userId,
@@ -681,6 +701,8 @@ export function saveJournalEntry(entry: {
           entry.goals_achieved || null,
           entry.challenges || null,
           entry.note || '',
+          entry.photo_uri || null,
+          entry.photo_asset_id || null,
           entry.tags ? JSON.stringify(entry.tags) : '[]',
         ],
       );
@@ -1393,6 +1415,72 @@ export function getActivityAggregates(
       });
       
       resolve(aggregates);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+// ========== AILY Blog Functions ==========
+export function saveAilyBlog(entry: {
+  entry_date: number;
+  photo_uri?: string | null;
+  photo_asset_id?: string | null;
+  letter?: string | null;
+}): Promise<string> {
+  return new Promise((resolve, reject) => {
+    try {
+      const id = generateId();
+      db.runSync(
+        `INSERT INTO aily_blogs (id, entry_date, photo_uri, photo_asset_id, letter)
+         VALUES (?, ?, ?, ?, ?)`,
+        [
+          id,
+          entry.entry_date,
+          entry.photo_uri || null,
+          entry.photo_asset_id || null,
+          entry.letter || null,
+        ]
+      );
+      resolve(id);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getAilyBlogs(): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    try {
+      const result = db.getAllSync(
+        `SELECT * FROM aily_blogs ORDER BY entry_date DESC`
+      );
+      resolve(result || []);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getAilyBlogById(id: string): Promise<any | null> {
+  return new Promise((resolve, reject) => {
+    try {
+      const result = db.getAllSync(
+        `SELECT * FROM aily_blogs WHERE id = ?`,
+        [id]
+      );
+      resolve(result && result.length > 0 ? result[0] : null);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function deleteAilyBlog(id: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    try {
+      db.runSync(`DELETE FROM aily_blogs WHERE id = ?`, [id]);
+      resolve();
     } catch (error) {
       reject(error);
     }

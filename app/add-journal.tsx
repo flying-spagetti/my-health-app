@@ -2,8 +2,9 @@ import BigButton from '@/components/BigButton';
 import { tokens } from '@/constants/theme';
 import { saveJournalEntry } from '@/services/db';
 import { useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
-import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const MOODS = ['Happy', 'Calm', 'Energetic', 'Focused', 'Grateful', 'Anxious', 'Stressed', 'Sad', 'Tired', 'Irritated', 'Neutral', 'Excited'];
 const EXERCISE_TYPES = ['Walking', 'Running', 'Cycling', 'Yoga', 'Strength Training', 'Swimming', 'Dance', 'Sports', 'Other'];
@@ -31,6 +32,8 @@ export default function AddJournalScreen() {
   const [challenges, setChallenges] = useState('');
   const [note, setNote] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [photoAssetId, setPhotoAssetId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const TAGS = ['work', 'health', 'family', 'social', 'travel', 'food', 'exercise', 'meditation', 'creative', 'learning'];
@@ -41,6 +44,27 @@ export default function AddJournalScreen() {
         ? prev.filter(t => t !== tag)
         : [...prev, tag]
     );
+  };
+
+  const handlePickPhoto = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permission.status !== 'granted') {
+      Alert.alert('Permission needed', 'Allow photo access to attach a picture.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.9,
+      copyToCacheDirectory: false,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      const asset = result.assets[0];
+      setPhotoUri(asset.uri);
+      setPhotoAssetId(asset.assetId ?? null);
+    }
   };
 
   const renderScaleSelector = (
@@ -100,6 +124,8 @@ export default function AddJournalScreen() {
         goals_achieved: goalsAchieved.trim() || undefined,
         challenges: challenges.trim() || undefined,
         note: note.trim() || undefined,
+        photo_uri: photoUri || undefined,
+        photo_asset_id: photoAssetId,
         tags: selectedTags,
         entry_date: Date.now(),
       });
@@ -124,6 +150,20 @@ export default function AddJournalScreen() {
         </View>
 
         <View style={styles.form}>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Photo Memory</Text>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Attach a photo</Text>
+              <TouchableOpacity style={styles.photoButton} onPress={handlePickPhoto}>
+                <Text style={styles.photoButtonText}>
+                  {photoUri ? 'Change Photo' : 'Pick Photo'}
+                </Text>
+              </TouchableOpacity>
+              {photoUri ? (
+                <Image source={{ uri: photoUri }} style={styles.photoPreview} />
+              ) : null}
+            </View>
+          </View>
           {/* Mood & Emotional State */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Mood & Emotional State</Text>
@@ -480,6 +520,24 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: tokens.colors.text,
     marginBottom: tokens.spacing.sm,
+  },
+  photoButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: tokens.colors.primary,
+    borderRadius: tokens.borderRadius.md,
+    paddingHorizontal: tokens.spacing.lg,
+    paddingVertical: tokens.spacing.sm,
+  },
+  photoButtonText: {
+    fontSize: tokens.typography.body,
+    fontWeight: '600',
+    color: tokens.colors.bg,
+  },
+  photoPreview: {
+    marginTop: tokens.spacing.md,
+    width: '100%',
+    height: 180,
+    borderRadius: tokens.borderRadius.md,
   },
   input: {
     backgroundColor: tokens.colors.card,

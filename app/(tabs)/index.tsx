@@ -256,6 +256,17 @@ export default function HomeScreen() {
               </Text>
             </View>
           </View>
+          <View style={styles.headerCenter}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              delayLongPress={2000}
+              onLongPress={() => router.push('/journal')}
+            >
+              <Text style={[styles.ailyTitle, { color: tokens.colors.textHandwritten }]}>
+                AILY
+              </Text>
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity style={styles.notificationButton}>
             <IconSymbol name="bell" size={24} color={tokens.colors.text} />
           </TouchableOpacity>
@@ -552,6 +563,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
   avatar: {
     width: 44,
     height: 44,
@@ -566,6 +581,11 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 18,
     fontFamily: 'Nunito-Bold',
+  },
+  ailyTitle: {
+    fontSize: 22,
+    fontFamily: 'Caveat-SemiBold',
+    letterSpacing: 0.5,
   },
   notificationButton: {
     padding: spacing.xs,
