@@ -1,28 +1,28 @@
+import {
+    computeDoctorSummary,
+    formatDoctorSummaryText,
+} from '@/analytics/doctorSummary';
 import DateTimePicker from '@/components/DateTimePicker';
 import { borderRadius, getThemeTokens, shadows, spacing } from '@/constants/theme';
 import { useThemePreference } from '@/hooks/use-theme-preference';
 import {
-  getBpReadingsInRange,
-  getMedicationsAndSchedules,
-  getMedicationLogs,
-  getMeditationLogsInRange,
-  getMigraineEntriesInRange,
+    getBpReadingsInRange,
+    getMedicationLogs,
+    getMedicationsAndSchedules,
+    getMeditationLogsInRange,
+    getMigraineEntriesInRange,
 } from '@/services/db';
-import {
-  computeDoctorSummary,
-  formatDoctorSummaryText,
-} from '@/analytics/doctorSummary';
 import * as Clipboard from 'expo-clipboard';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  Share,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    Share,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -151,7 +151,7 @@ export default function DoctorVisitSummaryScreen() {
 
   useEffect(() => {
     if (__DEV__) {
-      console.log('Doctor visit summary computed:', summary);
+      //console.log('Doctor visit summary computed:', summary);
     }
   }, [summary]);
 
@@ -341,7 +341,7 @@ export default function DoctorVisitSummaryScreen() {
                   <View key={ep.id} style={[styles.card, { backgroundColor: tokens.colors.card }, shadows.low]}>
                     <View style={styles.cardHeader}>
                       <Text style={[styles.cardTitle, { color: tokens.colors.text }]}>
-                        {formatDateTime(ep.startedAt)}
+                        {formatDateTime(ep.startedAt ?? 0)}
                       </Text>
                       <Text style={[styles.badge, { color: tokens.colors.primary }]}>
                         {ep.severity ?? '—'}/10
@@ -385,7 +385,7 @@ export default function DoctorVisitSummaryScreen() {
                 summary.redFlags.map((flag) => (
                   <View key={flag.id} style={[styles.card, { backgroundColor: tokens.colors.card }, shadows.low]}>
                     <Text style={[styles.cardTitle, { color: tokens.colors.text }]}>
-                      {formatDateTime(flag.startedAt)}
+                      {formatDateTime(flag.startedAt ?? 0)}
                     </Text>
                     {flag.reasons.map((reason, idx) => (
                       <Text key={idx} style={[styles.cardBody, { color: tokens.colors.textMuted }]}>
