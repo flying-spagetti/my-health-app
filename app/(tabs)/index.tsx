@@ -175,6 +175,15 @@ export default function HomeScreen() {
 
   const handleMarkDone = async (item: DueItem) => {
     try {
+      // Optimistically update UI
+      setDueItems(prevItems =>
+        prevItems.map(prevItem =>
+          prevItem.id === item.id && prevItem.scheduleId === item.scheduleId
+            ? { ...prevItem, status: 'done' as const }
+            : prevItem
+        )
+      );
+
       const eventType = item.type === 'medication' || item.type === 'supplement' ? 'taken' : 'done';
       await createTrackingEvent({
         parent_type: item.type,
@@ -184,10 +193,13 @@ export default function HomeScreen() {
         event_date: Date.now(),
         event_time: Date.now(),
       });
-      // Reload data
+      
+      // Reload data to ensure consistency
       loadData();
     } catch (error) {
       console.error('Error marking item done:', error);
+      // Revert optimistic update on error
+      loadData();
     }
   };
 
@@ -230,17 +242,6 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <View style={[styles.avatar, { backgroundColor: tokens.colors.primary }]}>
-              {/* TODO: Add profile-image.png to assets/images/ to display user avatar */}
-              {/* For now, showing icon placeholder. To add your image:
-                  1. Add profile-image.png to assets/images/
-                  2. Uncomment the Image component below and remove the IconSymbol
-                  
-                  <Image 
-                    source={require('@/assets/images/profile-image.png')} 
-                    style={{ width: 36, height: 36, borderRadius: 18 }} 
-                    resizeMode="cover" 
-                  />
-              */}
               <Image 
                     source={require('@/assets/images/profile-image.jpg')} 
                     style={{ width: 36, height: 36, borderRadius: 18 }} 
@@ -256,20 +257,22 @@ export default function HomeScreen() {
               </Text>
             </View>
           </View>
-          <View style={styles.headerCenter}>
+          <View style={styles.headerRight}>
+            <TouchableOpacity style={styles.notificationButton}>
+              <IconSymbol name="bell" size={24} color={tokens.colors.text} />
+            </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.7}
               delayLongPress={2000}
               onLongPress={() => router.push('/journal')}
             >
-              <Text style={[styles.ailyTitle, { color: tokens.colors.textHandwritten }]}>
-                AILY
-              </Text>
+              <Image 
+                source={require('@/assets/images/image.png')} 
+                style={styles.headerIcon}
+                resizeMode="contain"
+              />
             </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.notificationButton}>
-            <IconSymbol name="bell" size={24} color={tokens.colors.text} />
-          </TouchableOpacity>
         </View>
 
         {/* Mood History Card */}
@@ -562,10 +565,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-  },
-  headerCenter: {
     flex: 1,
+  },
+  headerRight: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.md,
   },
   avatar: {
     width: 44,
@@ -586,6 +591,10 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontFamily: 'Caveat-SemiBold',
     letterSpacing: 0.5,
+  },
+  headerIcon: {
+    width: 48,
+    height: 48,
   },
   notificationButton: {
     padding: spacing.xs,
