@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xxs,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Nunito-Regular',
   },
   statsCard: {

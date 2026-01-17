@@ -1,4 +1,4 @@
-import { tokens } from '@/constants/theme';
+import { tokens, spacing, borderRadius, shadows } from '@/constants/theme';
 import { getBPReadings } from '@/services/db';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -85,75 +85,83 @@ export default function BPHistoryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: tokens.colors.bg,
+    backgroundColor: tokens.colors.background,
   },
   content: {
-    padding: tokens.spacing.lg,
-    paddingBottom: tokens.spacing.xl,
+    padding: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   header: {
-    marginBottom: tokens.spacing.lg,
+    marginBottom: spacing.xl,
   },
   title: {
-    fontSize: tokens.typography.h1,
-    fontWeight: '700',
-    color: tokens.colors.text,
-    marginBottom: tokens.spacing.xs,
+    fontSize: 32,
+    fontFamily: 'Caveat-SemiBold',
+    color: tokens.colors.textHandwritten,
+    marginBottom: spacing.xxs,
   },
   subtitle: {
-    fontSize: tokens.typography.body,
+    fontSize: 16,
+    fontFamily: 'Nunito-Regular',
     color: tokens.colors.textMuted,
   },
   card: {
     backgroundColor: tokens.colors.card,
-    borderRadius: tokens.borderRadius.md,
-    padding: tokens.spacing.md,
-    marginBottom: tokens.spacing.md,
-    ...tokens.shadows.sm,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    ...shadows.low,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: tokens.spacing.sm,
+    marginBottom: spacing.sm,
   },
   bpValue: {
-    fontSize: tokens.typography.h2,
+    fontSize: 22,
+    fontFamily: 'Nunito-SemiBold',
     fontWeight: '600',
     color: tokens.colors.text,
   },
   dateText: {
-    fontSize: tokens.typography.small,
+    fontSize: 12,
+    fontFamily: 'Nunito-Regular',
     color: tokens.colors.textMuted,
   },
   metaText: {
-    fontSize: tokens.typography.caption,
+    fontSize: 14,
+    fontFamily: 'Nunito-Regular',
     color: tokens.colors.textSecondary,
-    marginBottom: tokens.spacing.xs,
+    marginBottom: spacing.xs,
   },
   noteText: {
-    fontSize: tokens.typography.body,
+    fontSize: 16,
+    fontFamily: 'Nunito-Regular',
     color: tokens.colors.text,
   },
   emptyState: {
-    paddingVertical: tokens.spacing.xl,
+    paddingVertical: spacing.xl,
     alignItems: 'center',
   },
   emptyTitle: {
-    fontSize: tokens.typography.h2,
+    fontSize: 22,
+    fontFamily: 'Nunito-SemiBold',
     fontWeight: '600',
     color: tokens.colors.text,
-    marginBottom: tokens.spacing.sm,
+    marginBottom: spacing.sm,
     textAlign: 'center',
   },
   emptySubtitle: {
-    fontSize: tokens.typography.body,
+    fontSize: 16,
+    fontFamily: 'Nunito-Regular',
     color: tokens.colors.textMuted,
     textAlign: 'center',
   },
   disclaimer: {
-    marginTop: tokens.spacing.xl,
-    fontSize: tokens.typography.caption,
+    marginTop: spacing.xl,
+    fontSize: 14,
+    fontFamily: 'Nunito-Regular',
     color: tokens.colors.textMuted,
   },
 });

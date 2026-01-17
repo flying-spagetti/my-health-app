@@ -172,7 +172,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xxs,
   },
   subtitle: {
-    fontSize: tokens.typography.body,
+    fontSize: 16,
+    fontFamily: 'Nunito-Regular',
     color: tokens.colors.textMuted,
   },
   form: {
@@ -182,19 +183,21 @@ const styles = StyleSheet.create({
     marginBottom: tokens.spacing.lg,
   },
   label: {
-    fontSize: tokens.typography.body,
+    fontSize: 16,
+    fontFamily: 'Nunito-SemiBold',
     fontWeight: '500',
     color: tokens.colors.text,
-    marginBottom: tokens.spacing.sm,
+    marginBottom: spacing.sm,
   },
   input: {
-    backgroundColor: tokens.colors.backgroundWellness,
-    borderRadius: tokens.borderRadius.md,
-    padding: tokens.spacing.md,
-    fontSize: tokens.typography.body,
+    backgroundColor: tokens.colors.cardSecondary,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    fontSize: 16,
+    fontFamily: 'Nunito-Regular',
     color: tokens.colors.text,
     borderWidth: 1,
-    borderColor: tokens.colors.border,
+    borderColor: 'transparent',
   },
   textArea: {
     height: 80,

@@ -1,6 +1,6 @@
 import BigButton from '@/components/BigButton';
 import DateTimePicker from '@/components/DateTimePicker';
-import { tokens } from '@/constants/theme';
+import { borderRadius, spacing, tokens } from '@/constants/theme';
 import { saveJournalEntry } from '@/services/db';
 import Slider from '@react-native-community/slider';
 import * as ImagePicker from 'expo-image-picker';
@@ -324,92 +324,134 @@ export default function AddJournalScreenV2() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: tokens.colors.background },
   keyboardView: { flex: 1 },
-  content: { padding: tokens.spacing.lg, paddingBottom: 140 },
+  content: { padding: spacing.lg, paddingBottom: 140 },
 
-  title: { fontSize: tokens.typography.h1, fontWeight: '800', color: tokens.colors.text },
-  subtitle: { marginTop: 6, marginBottom: tokens.spacing.lg, color: tokens.colors.textMuted },
+  title: { 
+    fontSize: 32, 
+    fontFamily: 'Caveat-SemiBold',
+    color: tokens.colors.textHandwritten,
+  },
+  subtitle: { 
+    marginTop: 6, 
+    marginBottom: spacing.lg, 
+    fontSize: 16,
+    fontFamily: 'Nunito-Regular',
+    color: tokens.colors.textMuted,
+  },
 
   card: {
     backgroundColor: tokens.colors.card,
-    borderRadius: tokens.borderRadius.lg,
-    padding: tokens.spacing.lg,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    marginBottom: tokens.spacing.md,
-    gap: tokens.spacing.md,
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    gap: spacing.md,
   },
 
-  label: { fontSize: tokens.typography.body, fontWeight: '600', color: tokens.colors.text },
+  label: { 
+    fontSize: 16, 
+    fontFamily: 'Nunito-SemiBold',
+    fontWeight: '600', 
+    color: tokens.colors.text,
+  },
 
   input: {
-    backgroundColor: tokens.colors.background,
-    borderRadius: tokens.borderRadius.md,
-    padding: tokens.spacing.md,
+    backgroundColor: tokens.colors.cardSecondary,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
     borderWidth: 1,
-    borderColor: tokens.colors.border,
+    borderColor: 'transparent',
+    fontSize: 16,
+    fontFamily: 'Nunito-Regular',
     color: tokens.colors.text,
   },
   textArea: {
     minHeight: 110,
-    backgroundColor: tokens.colors.background,
-    borderRadius: tokens.borderRadius.md,
-    padding: tokens.spacing.md,
+    backgroundColor: tokens.colors.cardSecondary,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
     borderWidth: 1,
-    borderColor: tokens.colors.border,
+    borderColor: 'transparent',
+    fontSize: 16,
+    fontFamily: 'Nunito-Regular',
     color: tokens.colors.text,
   },
 
   photoButton: {
     alignSelf: 'flex-start',
     backgroundColor: tokens.colors.primary,
-    borderRadius: tokens.borderRadius.md,
-    paddingHorizontal: tokens.spacing.lg,
-    paddingVertical: tokens.spacing.sm,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
   },
-  photoButtonText: { color: tokens.colors.background, fontWeight: '700' },
-  photoPreview: { width: '100%', height: 180, borderRadius: tokens.borderRadius.md },
+  photoButtonText: { 
+    color: tokens.colors.background, 
+    fontFamily: 'Nunito-Bold',
+    fontWeight: '700',
+  },
+  photoPreview: { width: '100%', height: 180, borderRadius: borderRadius.md },
 
-  moodGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm },
+  moodGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   moodChip: {
     paddingVertical: 10,
     paddingHorizontal: 12,
-    borderRadius: 999,
+    borderRadius: borderRadius.full,
     borderWidth: 1,
     borderColor: tokens.colors.border,
     backgroundColor: tokens.colors.background,
   },
   moodChipSelected: { backgroundColor: tokens.colors.primary, borderColor: tokens.colors.primary },
-  moodChipText: { color: tokens.colors.text, fontWeight: '600' },
+  moodChipText: { 
+    color: tokens.colors.text, 
+    fontFamily: 'Nunito-SemiBold',
+    fontWeight: '600',
+  },
   moodChipTextSelected: { color: tokens.colors.background },
 
   scaleRow: { gap: 8 },
   scaleTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  scaleValue: { color: tokens.colors.textMuted, fontWeight: '700' },
+  scaleValue: { 
+    color: tokens.colors.textMuted, 
+    fontFamily: 'Nunito-Bold',
+    fontWeight: '700',
+  },
   scaleHints: { flexDirection: 'row', justifyContent: 'space-between' },
-  hint: { color: tokens.colors.textMuted, fontSize: tokens.typography.caption },
+  hint: { 
+    color: tokens.colors.textMuted, 
+    fontSize: 14,
+    fontFamily: 'Nunito-Regular',
+  },
 
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sectionTitle: { fontSize: tokens.typography.h3, fontWeight: '800', color: tokens.colors.text },
+  sectionTitle: { 
+    fontSize: 18, 
+    fontFamily: 'Nunito-Bold',
+    fontWeight: '800', 
+    color: tokens.colors.text,
+  },
   sectionChevron: { color: tokens.colors.textMuted, fontSize: 18, fontWeight: '900' },
 
-  tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm, marginTop: tokens.spacing.sm },
+  tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
   tagChip: {
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderRadius: 999,
+    borderRadius: borderRadius.full,
     borderWidth: 1,
     borderColor: tokens.colors.border,
     backgroundColor: tokens.colors.background,
   },
   tagChipSelected: { backgroundColor: tokens.colors.accent, borderColor: tokens.colors.accent },
-  tagChipText: { color: tokens.colors.textMuted, fontWeight: '700' },
+  tagChipText: { 
+    color: tokens.colors.textMuted, 
+    fontFamily: 'Nunito-SemiBold',
+    fontWeight: '700',
+  },
   tagChipTextSelected: { color: tokens.colors.background },
 
   stickyFooter: {
     position: 'absolute',
-    left: tokens.spacing.lg,
-    right: tokens.spacing.lg,
-    bottom: tokens.spacing.lg,
+    left: spacing.lg,
+    right: spacing.lg,
+    bottom: spacing.lg,
     zIndex: 10,
   },
 });

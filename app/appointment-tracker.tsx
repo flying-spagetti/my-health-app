@@ -1,18 +1,18 @@
-import { getThemeTokens } from '@/constants/theme';
-import { getAppointments, updateAppointment, createTrackingEvent } from '@/services/db';
+import { borderRadius, getThemeTokens, shadows, spacing } from '@/constants/theme';
+import { useThemePreference } from '@/hooks/use-theme-preference';
+import { createTrackingEvent, getAppointments, updateAppointment } from '@/services/db';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
+  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useThemePreference } from '@/hooks/use-theme-preference';
-import { useFocusEffect } from '@react-navigation/native';
 
 export default function AppointmentTrackerScreen() {
   const router = useRouter();
@@ -102,9 +102,9 @@ export default function AppointmentTrackerScreen() {
                     style={[
                       styles.card,
                       {
-                        backgroundColor: tokens.colors.elevatedSurface,
-                        borderColor: tokens.colors.border,
+                        backgroundColor: tokens.colors.card,
                       },
+                      shadows.low,
                     ]}
                   >
                     <View style={styles.cardHeader}>
@@ -155,10 +155,10 @@ export default function AppointmentTrackerScreen() {
                     style={[
                       styles.card,
                       {
-                        backgroundColor: tokens.colors.elevatedSurface,
-                        borderColor: tokens.colors.border,
+                        backgroundColor: tokens.colors.card,
                         opacity: apt.is_completed ? 0.7 : 1,
                       },
+                      shadows.low,
                     ]}
                   >
                     <Text style={[styles.doctor, { color: tokens.colors.text }]}>
@@ -194,52 +194,54 @@ export default function AppointmentTrackerScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    padding: 24,
-    paddingBottom: 32,
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.xl,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '800',
+    fontSize: 32,
+    fontFamily: 'Caveat-SemiBold',
   },
   addButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 12,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.full,
   },
   addButtonText: {
     color: '#fff',
+    fontFamily: 'Nunito-SemiBold',
     fontWeight: '600',
   },
 
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   statText: {
     fontSize: 13,
+    fontFamily: 'Nunito-Regular',
   },
 
   section: {
-    marginBottom: 24,
+    marginBottom: spacing.xl,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
+    fontFamily: 'Nunito-SemiBold',
     fontWeight: '700',
-    marginBottom: 12,
+    marginBottom: spacing.sm,
   },
 
   card: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -248,38 +250,44 @@ const styles = StyleSheet.create({
   },
   doctor: {
     fontSize: 16,
+    fontFamily: 'Nunito-SemiBold',
     fontWeight: '600',
   },
   when: {
     fontSize: 13,
+    fontFamily: 'Nunito-Bold',
     fontWeight: '700',
   },
   date: {
-    marginTop: 4,
+    marginTop: spacing.xxs,
     fontSize: 14,
+    fontFamily: 'Nunito-Regular',
   },
   meta: {
     fontSize: 13,
-    marginTop: 4,
+    fontFamily: 'Nunito-Regular',
+    marginTop: spacing.xxs,
   },
 
   completeButton: {
-    marginTop: 12,
-    paddingVertical: 10,
-    borderRadius: 12,
+    marginTop: spacing.sm,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
     alignItems: 'center',
   },
   completeText: {
     color: '#fff',
+    fontFamily: 'Nunito-SemiBold',
     fontWeight: '600',
   },
 
   empty: {
     alignItems: 'center',
-    paddingVertical: 48,
+    paddingVertical: spacing.huge,
   },
   emptyText: {
     fontSize: 16,
-    marginBottom: 16,
+    fontFamily: 'Nunito-Regular',
+    marginBottom: spacing.md,
   },
 });

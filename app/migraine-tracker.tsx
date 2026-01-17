@@ -1,10 +1,10 @@
-import { getThemeTokens, spacing, borderRadius, shadows } from '@/constants/theme';
+import { borderRadius, getThemeTokens, shadows, spacing } from '@/constants/theme';
+import { useThemePreference } from '@/hooks/use-theme-preference';
 import { getMigraineReadings } from '@/services/db';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useThemePreference } from '@/hooks/use-theme-preference';
 
 export default function MigraineTrackerScreen() {
   const router = useRouter();

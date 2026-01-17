@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xxs,
   },
   subtitle: { 
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Nunito-Regular',
     color: tokens.colors.textMuted,
   },
@@ -251,8 +251,6 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.colors.card,
     borderRadius: borderRadius.xl,
     padding: spacing.md,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
     marginBottom: spacing.md,
     gap: spacing.sm,
   },
@@ -264,11 +262,11 @@ const styles = StyleSheet.create({
     color: tokens.colors.text 
   },
   input: {
-    backgroundColor: tokens.colors.background,
+    backgroundColor: tokens.colors.cardSecondary,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: tokens.colors.border,
+    borderColor: 'transparent',
     fontSize: 16,
     fontFamily: 'Nunito-Regular',
     color: tokens.colors.text,
@@ -287,7 +285,7 @@ const styles = StyleSheet.create({
   day: {
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.sm,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.full,
     borderWidth: 1,
     borderColor: tokens.colors.border,
   },

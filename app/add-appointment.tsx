@@ -1,6 +1,6 @@
 import BigButton from '@/components/BigButton';
 import DateTimePicker from '@/components/DateTimePicker';
-import { getThemeTokens, tokens } from '@/constants/theme';
+import { tokens, spacing, borderRadius } from '@/constants/theme';
 import { createAppointment } from '@/services/db';
 import { rescheduleAllReminders } from '@/services/reminders';
 import { useRouter } from 'expo-router';
@@ -161,58 +161,61 @@ export default function AddAppointmentScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: tokens.colors.bg,
+    backgroundColor: tokens.colors.background,
   },
   content: {
     flexGrow: 1,
-    padding: tokens.spacing.lg,
+    padding: spacing.lg,
   },
   header: {
-    marginBottom: tokens.spacing.xl,
+    marginBottom: spacing.xl,
   },
   title: {
-    fontSize: tokens.typography.h1,
-    fontWeight: '700',
-    color: tokens.colors.text,
-    marginBottom: tokens.spacing.xs,
+    fontSize: 32,
+    fontFamily: 'Caveat-SemiBold',
+    color: tokens.colors.textHandwritten,
+    marginBottom: spacing.xxs,
   },
   subtitle: {
-    fontSize: tokens.typography.body,
+    fontSize: 16,
+    fontFamily: 'Nunito-Regular',
     color: tokens.colors.textMuted,
   },
   form: {
     flex: 1,
   },
   inputGroup: {
-    marginBottom: tokens.spacing.lg,
+    marginBottom: spacing.lg,
   },
   label: {
-    fontSize: tokens.typography.body,
+    fontSize: 16,
+    fontFamily: 'Nunito-SemiBold',
     fontWeight: '500',
     color: tokens.colors.text,
-    marginBottom: tokens.spacing.sm,
+    marginBottom: spacing.sm,
   },
   input: {
-    backgroundColor: tokens.colors.card,
-    borderRadius: tokens.borderRadius.md,
-    padding: tokens.spacing.md,
-    fontSize: tokens.typography.body,
+    backgroundColor: tokens.colors.cardSecondary,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    fontSize: 16,
+    fontFamily: 'Nunito-Regular',
     color: tokens.colors.text,
     borderWidth: 1,
-    borderColor: tokens.colors.border,
+    borderColor: 'transparent',
   },
   textArea: {
     height: 100,
   },
   typeContainer: {
     flexDirection: 'row',
-    gap: tokens.spacing.sm,
+    gap: spacing.sm,
   },
   typeButton: {
     flex: 1,
     backgroundColor: tokens.colors.surface,
-    borderRadius: tokens.borderRadius.md,
-    padding: tokens.spacing.md,
+    borderRadius: borderRadius.full,
+    padding: spacing.md,
     borderWidth: 1,
     borderColor: tokens.colors.border,
     alignItems: 'center',
@@ -222,15 +225,16 @@ const styles = StyleSheet.create({
     borderColor: tokens.colors.primary,
   },
   typeButtonText: {
-    fontSize: tokens.typography.body,
+    fontSize: 16,
+    fontFamily: 'Nunito-SemiBold',
     color: tokens.colors.text,
     fontWeight: '600',
   },
   typeButtonTextSelected: {
-    color: tokens.colors.bg,
+    color: tokens.colors.background,
   },
   footer: {
-    paddingTop: tokens.spacing.lg,
+    paddingTop: spacing.lg,
   },
 });
 

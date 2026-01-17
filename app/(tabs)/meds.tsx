@@ -1,12 +1,11 @@
-import { getThemeTokens } from '@/constants/theme';
-import { getMedications, getSupplements, getMeditationRoutines } from '@/services/db';
+import { borderRadius, getThemeTokens, shadows, spacing } from '@/constants/theme';
+import { useThemePreference } from '@/hooks/use-theme-preference';
+import { getMedications, getMeditationRoutines, getSupplements } from '@/services/db';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useThemePreference } from '@/hooks/use-theme-preference';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
 export default function TrackersScreen() {
   const router = useRouter();
@@ -41,7 +40,7 @@ export default function TrackersScreen() {
 
   const TrackerCard = ({ title, count, onPress, icon }: { title: string; count: number; onPress: () => void; icon: string }) => (
     <TouchableOpacity
-      style={[styles.trackerCard, { backgroundColor: tokens.colors.elevatedSurface, borderColor: tokens.colors.border }]}
+      style={[styles.trackerCard, { backgroundColor: tokens.colors.card }, shadows.low]}
       onPress={onPress}
     >
       <Text style={[styles.trackerIcon, { color: tokens.colors.primary }]}>{icon}</Text>
@@ -77,7 +76,7 @@ export default function TrackersScreen() {
                 medications.map((med) => (
                   <TouchableOpacity
                     key={med.id}
-                    style={[styles.itemCard, { backgroundColor: tokens.colors.elevatedSurface, borderColor: tokens.colors.border }]}
+                    style={[styles.itemCard, { backgroundColor: tokens.colors.card }, shadows.low]}
                     onPress={() => router.push(`/med-tracker?id=${med.id}`)}
                   >
                     <Text style={[styles.itemName, { color: tokens.colors.text }]}>{med.name}</Text>
@@ -178,84 +177,90 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 24,
-    paddingBottom: 32,
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
   },
   header: {
-    marginBottom: 24,
+    marginBottom: spacing.xl,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 4,
+    fontSize: 32,
+    fontFamily: 'Caveat-SemiBold',
+    marginBottom: spacing.xxs,
   },
   subtitle: {
     fontSize: 16,
+    fontFamily: 'Nunito-Regular',
   },
   loadingContainer: {
-    paddingVertical: 48,
+    paddingVertical: spacing.huge,
     alignItems: 'center',
   },
   section: {
-    marginBottom: 32,
+    marginBottom: spacing.xxl,
   },
   sectionTitle: {
     fontSize: 20,
+    fontFamily: 'Nunito-SemiBold',
     fontWeight: '600',
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   itemCard: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
   },
   itemName: {
     fontSize: 18,
+    fontFamily: 'Nunito-SemiBold',
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: spacing.xxs,
   },
   itemDosage: {
     fontSize: 14,
+    fontFamily: 'Nunito-Regular',
   },
   emptyText: {
     fontSize: 14,
-    marginBottom: 12,
+    fontFamily: 'Nunito-Regular',
+    marginBottom: spacing.sm,
     fontStyle: 'italic',
   },
   addButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.full,
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: spacing.xs,
   },
   addButtonText: {
     fontSize: 16,
+    fontFamily: 'Nunito-SemiBold',
     fontWeight: '600',
   },
   trackerCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
   },
   trackerIcon: {
     fontSize: 24,
-    marginRight: 16,
+    marginRight: spacing.md,
   },
   trackerInfo: {
     flex: 1,
   },
   trackerTitle: {
     fontSize: 18,
+    fontFamily: 'Nunito-SemiBold',
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: spacing.xxs,
   },
   trackerCount: {
     fontSize: 14,
+    fontFamily: 'Nunito-Regular',
   },
   trackerArrow: {
     fontSize: 24,
