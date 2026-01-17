@@ -8,32 +8,32 @@
  * - Quick add button
  */
 
-import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import {
-  View,
-  Text,
+  RefreshControl,
   ScrollView,
   StyleSheet,
+  Text,
   TouchableOpacity,
-  RefreshControl,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
 
-import { useThemePreference } from '@/hooks/use-theme-preference';
-import { 
-  getThemeTokens, 
-  getScreenBackground, 
-  getMoodColor,
-  spacing,
-  borderRadius,
-  shadows,
-} from '@/constants/theme';
-import { getJournalEntries } from '@/services/db';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { MoodCalendar } from '@/components/mood/MoodCalendar';
 import { MoodTrends } from '@/components/mood/MoodTrends';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import {
+  borderRadius,
+  getMoodColor,
+  getScreenBackground,
+  getThemeTokens,
+  shadows,
+  spacing,
+} from '@/constants/theme';
+import { useThemePreference } from '@/hooks/use-theme-preference';
+import { getJournalEntries } from '@/services/db';
 
 type JournalEntry = {
   id: string;
@@ -165,7 +165,7 @@ export default function MoodScreen() {
               <TouchableOpacity
                 key={entry.id}
                 style={[styles.entryCard, { backgroundColor: tokens.colors.card }, shadows.low]}
-                onPress={() => router.push(`/journal-detail?id=${entry.id}`)}
+                onPress={() => router.push({ pathname: '/journal/[id]', params: { id: entry.id } })}
                 activeOpacity={0.7}
               >
                 <View style={styles.entryHeader}>

@@ -42,6 +42,9 @@ import {
   getWorkouts
 } from '@/services/db';
 import { DueItem, getDueItemsToday } from '@/services/tracking';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import Feather from '@expo/vector-icons/Feather';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -258,9 +261,6 @@ export default function HomeScreen() {
             </View>
           </View>
           <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.notificationButton}>
-              <IconSymbol name="bell" size={24} color={tokens.colors.text} />
-            </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.7}
               delayLongPress={2000}
@@ -289,7 +289,7 @@ export default function HomeScreen() {
               <Text style={[styles.dropdownText, { color: tokens.colors.textMuted }]}>
                 Week
               </Text>
-              <IconSymbol name="chevron.right" size={14} color={tokens.colors.textMuted} />
+              <Feather name="chevron-right" size={14} color={tokens.colors.textMuted} />
             </View>
           </View>
           
@@ -421,11 +421,11 @@ export default function HomeScreen() {
                       handleMarkDone(item);
                     }}
                   >
-                    <IconSymbol name="checkmark" size={16} color="#FFFFFF" />
+                    <Feather name="check" size={16} color="#FFFFFF" />
                   </TouchableOpacity>
                 ) : (
                   <View style={[styles.checkButton, { backgroundColor: tokens.colors.success }]}>
-                    <IconSymbol name="checkmark" size={16} color="#FFFFFF" />
+                    <Feather name="check" size={16} color="#FFFFFF" />
                   </View>
                 )}
               </TouchableOpacity>
@@ -433,7 +433,7 @@ export default function HomeScreen() {
           </View>
         ) : (
           <View style={[styles.emptyCard, { backgroundColor: tokens.colors.card }, shadows.low]}>
-            <IconSymbol name="checkmark.circle" size={32} color={tokens.colors.success} />
+            <Feather name="check-circle" size={32} color={tokens.colors.success} />
             <Text style={[styles.emptyText, { color: tokens.colors.textMuted }]}>
               All caught up for today!
             </Text>
@@ -448,7 +448,7 @@ export default function HomeScreen() {
         <View style={[styles.activityCard, { backgroundColor: tokens.colors.card }, shadows.low]}>
           <View style={styles.activityRow}>
             <View style={styles.activityItem}>
-              <IconSymbol name="figure.walk" size={24} color={tokens.colors.primary} />
+              <FontAwesome5 name="walking" size={24} color={tokens.colors.primary} />
               <View>
                 <Text style={[styles.activityValue, { color: tokens.colors.text }]}>
                   {steps.toLocaleString()}
@@ -460,7 +460,7 @@ export default function HomeScreen() {
             </View>
             <View style={styles.activityDivider} />
             <View style={styles.activityItem}>
-              <IconSymbol name="flame.fill" size={24} color={tokens.colors.coral} />
+              <FontAwesome5 name="fire" size={24} color={tokens.colors.coral} />
               <View>
                 <Text style={[styles.activityValue, { color: tokens.colors.text }]}>
                   {activityMinutes}
@@ -481,7 +481,7 @@ export default function HomeScreen() {
         >
           <View style={styles.migraineHeader}>
             <View style={[styles.migraineIconContainer, { backgroundColor: tokens.colors.warning + '20' }]}>
-              <IconSymbol name="bolt.fill" size={20} color={tokens.colors.warning} />
+              <MaterialCommunityIcons name="brain" size={20} color={tokens.colors.warning} />
             </View>
             <View style={styles.migraineInfo}>
               <Text style={[styles.migraineTitle, { color: tokens.colors.text }]}>
@@ -493,7 +493,7 @@ export default function HomeScreen() {
                   : `${migraineStats.thisMonth} migraine${migraineStats.thisMonth === 1 ? '' : 's'} this month`}
               </Text>
             </View>
-            <IconSymbol name="chevron.right" size={18} color={tokens.colors.textMuted} />
+            <Feather name="chevron-right" size={18} color={tokens.colors.textMuted} />
           </View>
           {migraineStats.lastMigraine && (
             <View style={[styles.migraineLastEntry, { borderTopColor: tokens.colors.border }]}>
@@ -514,7 +514,7 @@ export default function HomeScreen() {
             onPress={() => router.push('/add-journal')}
             activeOpacity={0.8}
           >
-            <IconSymbol name="book.fill" size={18} color="#FFFFFF" />
+            <Feather name="book" size={18} color="#FFFFFF" />
             <Text style={styles.quickActionSmallText}>Journal</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -522,7 +522,7 @@ export default function HomeScreen() {
             onPress={() => router.push('/add-meditation')}
             activeOpacity={0.8}
           >
-            <IconSymbol name="leaf.fill" size={18} color="#FFFFFF" />
+            <FontAwesome5 name="leaf" size={18} color="#FFFFFF" />
             <Text style={styles.quickActionSmallText}>Meditate</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -530,7 +530,7 @@ export default function HomeScreen() {
             onPress={() => router.push('/add-bp')}
             activeOpacity={0.8}
           >
-            <IconSymbol name="heart.fill" size={18} color="#FFFFFF" />
+            <FontAwesome5 name="heart" size={18} color="#FFFFFF" />
             <Text style={styles.quickActionSmallText}>Log BP</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -538,7 +538,7 @@ export default function HomeScreen() {
             onPress={() => router.push('/add-migraine')}
             activeOpacity={0.8}
           >
-            <IconSymbol name="bolt.fill" size={18} color="#FFFFFF" />
+            <MaterialCommunityIcons name="brain" size={18} color="#FFFFFF" />
             <Text style={styles.quickActionSmallText}>Migraine</Text>
           </TouchableOpacity>
         </View>

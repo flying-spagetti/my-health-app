@@ -1,4 +1,4 @@
-import { getThemeTokens } from '@/constants/theme';
+import { getThemeTokens, spacing, borderRadius, shadows } from '@/constants/theme';
 import { getMigraineReadings } from '@/services/db';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -136,11 +136,11 @@ export default function MigraineTrackerScreen() {
         ) : (
           <>
             <View style={styles.statsSection}>
-              <View style={[styles.statCard, { backgroundColor: tokens.colors.elevatedSurface, borderColor: tokens.colors.border }]}>
+              <View style={[styles.statCard, { backgroundColor: tokens.colors.card }, shadows.low]}>
                 <Text style={[styles.statValue, { color: tokens.colors.text }]}>{totalCount}</Text>
                 <Text style={[styles.statLabel, { color: tokens.colors.textMuted }]}>Total Episodes</Text>
               </View>
-              <View style={[styles.statCard, { backgroundColor: tokens.colors.elevatedSurface, borderColor: tokens.colors.border }]}>
+              <View style={[styles.statCard, { backgroundColor: tokens.colors.card }, shadows.low]}>
                 <Text style={[styles.statValue, { color: tokens.colors.text }]}>{avgSeverity}</Text>
                 <Text style={[styles.statLabel, { color: tokens.colors.textMuted }]}>Avg Severity</Text>
               </View>
@@ -167,7 +167,7 @@ export default function MigraineTrackerScreen() {
                   return (
                     <View
                       key={migraine.id}
-                      style={[styles.migraineCard, { backgroundColor: tokens.colors.elevatedSurface, borderColor: tokens.colors.border }]}
+                      style={[styles.migraineCard, { backgroundColor: tokens.colors.card }, shadows.low]}
                     >
                       <View style={styles.migraineHeader}>
                         <View>
@@ -228,140 +228,150 @@ export default function MigraineTrackerScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    padding: 24,
-    paddingBottom: 32,
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: spacing.xl,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 32,
+    fontFamily: 'Caveat-SemiBold',
+    color: tokens.colors.textHandwritten,
   },
   addButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 12,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.full,
   },
   addButtonText: {
     fontSize: 14,
+    fontFamily: 'Nunito-SemiBold',
     fontWeight: '600',
   },
   filterSection: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 24,
+    gap: spacing.xs,
+    marginBottom: spacing.xl,
   },
   filterButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    borderWidth: 1,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.full,
   },
   filterText: {
     fontSize: 14,
+    fontFamily: 'Nunito-SemiBold',
     fontWeight: '600',
   },
   loadingContainer: {
-    paddingVertical: 48,
+    paddingVertical: spacing.huge,
     alignItems: 'center',
   },
   statsSection: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 24,
+    gap: spacing.sm,
+    marginBottom: spacing.xl,
   },
   statCard: {
     flex: 1,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
     alignItems: 'center',
   },
   statValue: {
     fontSize: 24,
+    fontFamily: 'Nunito-Bold',
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: spacing.xxs,
   },
   statLabel: {
     fontSize: 12,
+    fontFamily: 'Nunito-Regular',
     textAlign: 'center',
   },
   emptyState: {
     alignItems: 'center',
-    paddingVertical: 48,
+    paddingVertical: spacing.huge,
   },
   emptyText: {
     fontSize: 16,
-    marginBottom: 16,
+    fontFamily: 'Nunito-Regular',
+    marginBottom: spacing.md,
   },
   emptyButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xl,
+    borderRadius: borderRadius.full,
   },
   emptyButtonText: {
     fontSize: 16,
+    fontFamily: 'Nunito-SemiBold',
     fontWeight: '600',
   },
   listSection: {
-    marginTop: 8,
+    marginTop: spacing.xs,
   },
   migraineCard: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
   },
   migraineHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: spacing.sm,
   },
   migraineDate: {
     fontSize: 16,
+    fontFamily: 'Nunito-SemiBold',
     fontWeight: '600',
   },
   migraineDuration: {
     fontSize: 12,
-    marginTop: 4,
+    fontFamily: 'Nunito-Regular',
+    marginTop: spacing.xxs,
   },
   severityBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xxs,
+    borderRadius: borderRadius.md,
   },
   severityText: {
     fontSize: 14,
+    fontFamily: 'Nunito-Bold',
     fontWeight: '700',
   },
   tagsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
-    marginBottom: 8,
-    gap: 6,
+    marginBottom: spacing.xs,
+    gap: spacing.xxs,
   },
   tagsLabel: {
     fontSize: 12,
+    fontFamily: 'Nunito-SemiBold',
     fontWeight: '600',
   },
   tag: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.xxs,
+    borderRadius: borderRadius.sm,
   },
   tagText: {
     fontSize: 12,
+    fontFamily: 'Nunito-Regular',
   },
   migraineNote: {
     fontSize: 14,
+    fontFamily: 'Nunito-Regular',
     lineHeight: 20,
-    marginTop: 8,
+    marginTop: spacing.xs,
   },
 });
 

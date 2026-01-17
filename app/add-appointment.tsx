@@ -1,4 +1,5 @@
 import BigButton from '@/components/BigButton';
+import DateTimePicker from '@/components/DateTimePicker';
 import { getThemeTokens, tokens } from '@/constants/theme';
 import { createAppointment } from '@/services/db';
 import { rescheduleAllReminders } from '@/services/reminders';
@@ -13,7 +14,7 @@ export default function AddAppointmentScreen() {
   const [location, setLocation] = useState('');
   const [notes, setNotes] = useState('');
   const [appointmentType, setAppointmentType] = useState<'visit' | 'followup'>('visit');
-  const [dateTime, setDateTime] = useState('');
+  const [dateTime, setDateTime] = useState(new Date());
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSave = async () => {
@@ -22,26 +23,7 @@ export default function AddAppointmentScreen() {
       return;
     }
 
-    if (!dateTime.trim()) {
-      Alert.alert('Error', 'Please enter appointment date and time');
-      return;
-    }
-
-    // Parse date time string (expecting format like "2024-12-25 14:30")
-    let appointmentDate: number;
-    try {
-      const [datePart, timePart] = dateTime.trim().split(' ');
-      const [year, month, day] = datePart.split('-').map(Number);
-      const [hours, minutes] = timePart ? timePart.split(':').map(Number) : [12, 0];
-      appointmentDate = new Date(year, month - 1, day, hours, minutes).getTime();
-      
-      if (isNaN(appointmentDate)) {
-        throw new Error('Invalid date');
-      }
-    } catch {
-      Alert.alert('Error', 'Please enter date and time in format: YYYY-MM-DD HH:MM');
-      return;
-    }
+    const appointmentDate = dateTime.getTime();
 
     setIsLoading(true);
     try {
@@ -142,17 +124,12 @@ export default function AddAppointmentScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Date & Time *</Text>
-            <TextInput
-              style={styles.input}
+            <DateTimePicker
+              label="Date & Time *"
               value={dateTime}
-              onChangeText={setDateTime}
-              placeholder="YYYY-MM-DD HH:MM (e.g., 2024-12-25 14:30)"
-              keyboardType="default"
+              onChange={setDateTime}
+              mode="datetime"
             />
-            <Text style={styles.hint}>
-              Format: YYYY-MM-DD HH:MM (24-hour format)
-            </Text>
           </View>
 
           <View style={styles.inputGroup}>
@@ -251,11 +228,6 @@ const styles = StyleSheet.create({
   },
   typeButtonTextSelected: {
     color: tokens.colors.bg,
-  },
-  hint: {
-    fontSize: tokens.typography.caption,
-    color: tokens.colors.textMuted,
-    marginTop: tokens.spacing.xs,
   },
   footer: {
     paddingTop: tokens.spacing.lg,

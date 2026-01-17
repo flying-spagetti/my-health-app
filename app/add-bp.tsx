@@ -1,9 +1,10 @@
 import BigButton from '@/components/BigButton';
-import { tokens } from '@/constants/theme';
+import DateTimePicker from '@/components/DateTimePicker';
+import { spacing, tokens } from '@/constants/theme';
 import { saveBPReading } from '@/services/db';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function AddBPScreen() {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function AddBPScreen() {
   const [diastolic, setDiastolic] = useState('');
   const [pulse, setPulse] = useState('');
   const [note, setNote] = useState('');
+  const [measuredAt, setMeasuredAt] = useState(new Date());
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSave = async () => {
@@ -40,7 +42,7 @@ export default function AddBPScreen() {
         diastolic: diastolicNum,
         pulse: pulseNum,
         note: note.trim(),
-        measured_at: Date.now(),
+        measured_at: measuredAt.getTime(),
       });
       
       Alert.alert('Success', 'Blood pressure reading saved!', [
@@ -56,13 +58,34 @@ export default function AddBPScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
+        >
         <View style={styles.header}>
-          <Text style={styles.title}>Add Blood Pressure</Text>
+        <Text style={[styles.title, { color: tokens.colors.textHandwritten }]}>
+          Add Blood Pressure
+          </Text>
           <Text style={styles.subtitle}>Record your latest blood pressure reading</Text>
         </View>
 
         <View style={styles.form}>
+          <View style={styles.inputGroup}>
+            <DateTimePicker
+              label="Date & Time"
+              value={measuredAt}
+              onChange={setMeasuredAt}
+              mode="datetime"
+            />
+          </View>
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Systolic (mmHg) *</Text>
             <TextInput
@@ -113,11 +136,6 @@ export default function AddBPScreen() {
           </View>
         </View>
 
-        <Text style={styles.disclaimer}>
-          This app does not provide medical advice. If you are concerned about your blood pressure,
-          contact a healthcare professional.
-        </Text>
-
         <View style={styles.footer}>
           <BigButton 
             title={isLoading ? "Saving..." : "Save Reading"} 
@@ -126,6 +144,7 @@ export default function AddBPScreen() {
           />
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -133,20 +152,24 @@ export default function AddBPScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: tokens.colors.bg,
+    backgroundColor: tokens.colors.background,
+  },
+  keyboardView: {
+    flex: 1,
   },
   content: {
     flexGrow: 1,
     padding: tokens.spacing.lg,
+    paddingBottom: tokens.spacing.xxxl,
   },
   header: {
     marginBottom: tokens.spacing.xl,
   },
-  title: {
-    fontSize: tokens.typography.h1,
-    fontWeight: '700',
-    color: tokens.colors.text,
-    marginBottom: tokens.spacing.xs,
+  title: { 
+    fontSize: 32, 
+    fontFamily: 'Caveat-SemiBold',
+    color: tokens.colors.textHandwritten,
+    marginBottom: spacing.xxs,
   },
   subtitle: {
     fontSize: tokens.typography.body,
@@ -165,7 +188,7 @@ const styles = StyleSheet.create({
     marginBottom: tokens.spacing.sm,
   },
   input: {
-    backgroundColor: tokens.colors.card,
+    backgroundColor: tokens.colors.backgroundWellness,
     borderRadius: tokens.borderRadius.md,
     padding: tokens.spacing.md,
     fontSize: tokens.typography.body,

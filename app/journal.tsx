@@ -18,7 +18,10 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image as ExpoImage } from 'expo-image';
+import Feather from '@expo/vector-icons/Feather';
 
+import DateTimePicker from '@/components/DateTimePicker';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { spacing } from '@/constants/theme';
 import { deleteAilyBlog, getAilyBlogs, saveAilyBlog } from '@/services/db';
@@ -61,8 +64,6 @@ export default function JournalScreen() {
   const [photoAssetId, setPhotoAssetId] = useState<string | null>(null);
   const [letter, setLetter] = useState('');
   const [entryDate, setEntryDate] = useState(new Date());
-  const [isEditingDate, setIsEditingDate] = useState(false);
-  const [dateInput, setDateInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   const loadBlogs = useCallback(async () => {
@@ -119,20 +120,6 @@ export default function JournalScreen() {
     });
   };
 
-  const handleDateEdit = () => {
-    setDateInput(entryDate.toISOString().split('T')[0]);
-    setIsEditingDate(true);
-  };
-
-  const handleDateSave = () => {
-    const parsed = new Date(dateInput);
-    if (!isNaN(parsed.getTime())) {
-      const newDate = new Date(entryDate);
-      newDate.setFullYear(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
-      setEntryDate(newDate);
-    }
-    setIsEditingDate(false);
-  };
 
   const handleSave = async () => {
     if (!letter.trim() && !photoUri) {
@@ -279,31 +266,13 @@ export default function JournalScreen() {
                 </TouchableOpacity>
 
                 {/* Date Section */}
-                <Pressable style={styles.dateCard} onPress={handleDateEdit}>
-                  <IconSymbol name="calendar" size={20} color={JOURNAL_COLORS.vibrantOrange} />
-                  {isEditingDate ? (
-                    <View style={styles.dateEditContainer}>
-                      <TextInput
-                        style={styles.dateEditInput}
-                        value={dateInput}
-                        onChangeText={setDateInput}
-                        placeholder="YYYY-MM-DD"
-                        placeholderTextColor={JOURNAL_COLORS.deepCharcoal + '60'}
-                        autoFocus
-                        onBlur={handleDateSave}
-                        onSubmitEditing={handleDateSave}
-                      />
-                      <TouchableOpacity onPress={handleDateSave}>
-                        <IconSymbol name="checkmark.circle.fill" size={24} color={JOURNAL_COLORS.vibrantOrange} />
-                      </TouchableOpacity>
-                    </View>
-                  ) : (
-                    <View style={styles.dateDisplayContainer}>
-                      <Text style={styles.dateDisplayText}>{formatDate(entryDate)}</Text>
-                      <Text style={styles.timeDisplayText}>{formatTime(entryDate)}</Text>
-                    </View>
-                  )}
-                </Pressable>
+                <View style={styles.dateCard}>
+                  <DateTimePicker
+                    value={entryDate}
+                    onChange={setEntryDate}
+                    mode="datetime"
+                  />
+                </View>
 
                 {/* Letter Section */}
                 <View style={styles.letterCard}>
@@ -334,14 +303,12 @@ export default function JournalScreen() {
     <View style={styles.headerContainer}>
       <SafeAreaView edges={['top']} style={styles.headerSafeArea}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
-            <IconSymbol name="chevron.left" size={24} color={JOURNAL_COLORS.deepCharcoal} />
-          </TouchableOpacity>
+            <ExpoImage source={require('@/assets/images/image.png')} style={{ width: 34, height: 34 }} />
           <View style={styles.headerTitleContainer}>
             <Text style={styles.headerTitle}>Ammu's Corner</Text>
             <Text style={styles.headerSubtitle}>Personal Diary</Text>
           </View>
-          <View style={styles.iconButton} />
+          <ExpoImage source={require('@/assets/images/image.png')} style={{ width: 34, height: 34 }} />
         </View>
       </SafeAreaView>
     </View>

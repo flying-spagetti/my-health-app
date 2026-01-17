@@ -1,36 +1,55 @@
 import BigButton from '@/components/BigButton';
-import { tokens } from '@/constants/theme';
-import { createMedication, createDoseSchedule } from '@/services/db';
+import DateTimePicker from '@/components/DateTimePicker';
+import { borderRadius, shadows, spacing, tokens } from '@/constants/theme';
+import { createDoseSchedule, createMedication } from '@/services/db';
 import { rescheduleAllReminders } from '@/services/reminders';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const EVERY_DAY = [0, 1, 2, 3, 4, 5, 6];
+
+type Schedule = {
+  time: Date;
+  days: number[];
+  dosage?: string;
+};
 
 export default function AddMedicationScreen() {
   const router = useRouter();
-  const [medicationName, setMedicationName] = useState('');
+
+  // Primary
+  const [name, setName] = useState('');
   const [dosage, setDosage] = useState('');
-  const [prescribingDoctor, setPrescribingDoctor] = useState('');
-  const [notes, setNotes] = useState('');
-  const [schedules, setSchedules] = useState<Array<{ time: string; days: number[]; dosage?: string }>>([
-    { time: '08:00', days: [1, 2, 3, 4, 5, 6, 0] }, // Default: every day at 8 AM
+
+  // Scheduling
+  const [schedules, setSchedules] = useState<Schedule[]>([
+    { time: new Date(new Date().setHours(8, 0, 0, 0)), days: EVERY_DAY },
   ]);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const addSchedule = () => {
-    setSchedules([...schedules, { time: '12:00', days: [1, 2, 3, 4, 5, 6, 0] }]);
-  };
+  // Optional
+  const [showDetails, setShowDetails] = useState(false);
+  const [doctor, setDoctor] = useState('');
+  const [notes, setNotes] = useState('');
 
-  const removeSchedule = (index: number) => {
-    setSchedules(schedules.filter((_, i) => i !== index));
-  };
+  const [isSaving, setIsSaving] = useState(false);
 
-  const updateSchedule = (index: number, updates: Partial<{ time: string; days: number[]; dosage: string }>) => {
-    const newSchedules = [...schedules];
-    newSchedules[index] = { ...newSchedules[index], ...updates };
-    setSchedules(newSchedules);
+  const updateSchedule = (index: number, updates: Partial<Schedule>) => {
+    const copy = [...schedules];
+    copy[index] = { ...copy[index], ...updates };
+    setSchedules(copy);
   };
 
   const toggleDay = (scheduleIndex: number, dayIndex: number) => {
@@ -41,329 +60,275 @@ export default function AddMedicationScreen() {
     updateSchedule(scheduleIndex, { days });
   };
 
+  const addSchedule = () => {
+    setSchedules([
+      ...schedules,
+      { time: new Date(new Date().setHours(20, 0, 0, 0)), days: EVERY_DAY },
+    ]);
+  };
+
+  const removeSchedule = (index: number) => {
+    setSchedules(schedules.filter((_, i) => i !== index));
+  };
+
   const handleSave = async () => {
-    if (!medicationName.trim()) {
-      Alert.alert('Error', 'Please enter a medication name');
+    if (!name.trim()) {
+      Alert.alert('Missing name', 'What medication is this?');
       return;
     }
-
     if (!dosage.trim()) {
-      Alert.alert('Error', 'Please enter the dosage');
+      Alert.alert('Missing dosage', 'How much should you take?');
       return;
     }
 
-    if (schedules.length === 0) {
-      Alert.alert('Error', 'Please add at least one schedule');
-      return;
-    }
-
-    for (const schedule of schedules) {
-      if (!schedule.time.match(/^\d{2}:\d{2}$/)) {
-        Alert.alert('Error', 'Please enter time in HH:MM format (e.g., 08:00)');
-        return;
-      }
-      if (schedule.days.length === 0) {
-        Alert.alert('Error', 'Please select at least one day for each schedule');
-        return;
-      }
-    }
-
-    setIsLoading(true);
+    setIsSaving(true);
     try {
       const medId = await createMedication({
-        name: medicationName.trim(),
+        name: name.trim(),
         dosage: dosage.trim(),
+        prescribing_doctor: doctor.trim() || undefined,
         notes: notes.trim() || undefined,
-        prescribing_doctor: prescribingDoctor.trim() || undefined,
       });
 
-      // Create schedules
       for (const schedule of schedules) {
+        const h = schedule.time.getHours().toString().padStart(2, '0');
+        const m = schedule.time.getMinutes().toString().padStart(2, '0');
+
         await createDoseSchedule({
           parent_type: 'medication',
           parent_id: medId,
-          time_of_day: schedule.time,
+          time_of_day: `${h}:${m}`,
           days_of_week: JSON.stringify(schedule.days),
-          dosage: schedule.dosage || dosage.trim(),
+          dosage: dosage.trim(),
         });
       }
-      
-      // Reschedule reminders (force reschedule since we added a new item)
+
       await rescheduleAllReminders(true);
-      
-      Alert.alert('Success', 'Medication added! We\'ll remind you when it\'s due.', [
-        { text: 'OK', onPress: () => router.push('/(tabs)') }
+
+      Alert.alert('Saved', 'Medication added.', [
+        { text: 'OK', onPress: () => router.back() },
       ]);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save medication. Please try again.');
-      console.error('Error saving medication:', error);
+    } catch (e) {
+      Alert.alert('Error', 'Could not save medication.');
+      console.error(e);
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <View style={styles.stickyFooter}>
+          <BigButton title={isSaving ? 'Saving…' : 'Save'} onPress={handleSave} disabled={isSaving} />
+        </View>
+
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
+        >
         <View style={styles.header}>
           <Text style={styles.title}>Add Medication</Text>
-          <Text style={styles.subtitle}>Set up medication tracking with schedules</Text>
+          <Text style={styles.subtitle}>We'll remind you when it's time.</Text>
         </View>
 
-        <View style={styles.form}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Medication Name *</Text>
-            <TextInput
-              style={styles.input}
-              value={medicationName}
-              onChangeText={setMedicationName}
-              placeholder="e.g., Aspirin, Metformin"
-            />
-          </View>
+        {/* PRIMARY */}
+        <View style={[styles.card, shadows.low]}>
+          <Text style={styles.label}>Medication</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. Metformin"
+            value={name}
+            onChangeText={setName}
+          />
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Dosage *</Text>
-            <TextInput
-              style={styles.input}
-              value={dosage}
-              onChangeText={setDosage}
-              placeholder="e.g., 100mg, 2 tablets"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Prescribing Doctor</Text>
-            <TextInput
-              style={styles.input}
-              value={prescribingDoctor}
-              onChangeText={setPrescribingDoctor}
-              placeholder="e.g., Dr. Smith"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Schedules *</Text>
-            {schedules.map((schedule, index) => (
-              <View key={index} style={styles.scheduleCard}>
-                <View style={styles.scheduleHeader}>
-                  <Text style={styles.scheduleLabel}>Schedule {index + 1}</Text>
-                  {schedules.length > 1 && (
-                    <TouchableOpacity onPress={() => removeSchedule(index)}>
-                      <Text style={styles.removeButton}>Remove</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-                
-                <View style={styles.timeRow}>
-                  <Text style={styles.timeLabel}>Time:</Text>
-                  <TextInput
-                    style={[styles.input, styles.timeInput]}
-                    value={schedule.time}
-                    onChangeText={(time) => updateSchedule(index, { time })}
-                    placeholder="08:00"
-                    keyboardType="numeric"
-                  />
-                </View>
-
-                <View style={styles.daysContainer}>
-                  <Text style={styles.daysLabel}>Days:</Text>
-                  <View style={styles.daysRow}>
-                    {DAYS_OF_WEEK.map((day, dayIndex) => (
-                      <TouchableOpacity
-                        key={dayIndex}
-                        style={[
-                          styles.dayButton,
-                          schedule.days.includes(dayIndex) && styles.dayButtonSelected
-                        ]}
-                        onPress={() => toggleDay(index, dayIndex)}
-                      >
-                        <Text style={[
-                          styles.dayButtonText,
-                          schedule.days.includes(dayIndex) && styles.dayButtonTextSelected
-                        ]}>
-                          {day}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-              </View>
-            ))}
-            
-            <TouchableOpacity style={styles.addScheduleButton} onPress={addSchedule}>
-              <Text style={styles.addScheduleText}>+ Add Another Schedule</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Notes</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={notes}
-              onChangeText={setNotes}
-              placeholder="Any additional notes..."
-              multiline
-              numberOfLines={3}
-              textAlignVertical="top"
-            />
-          </View>
-        </View>
-
-        <Text style={styles.disclaimer}>
-          This app is for tracking only and does not replace medical advice. Always follow your
-          prescriber's instructions.
-        </Text>
-
-        <View style={styles.footer}>
-          <BigButton 
-            title={isLoading ? "Saving..." : "Save Medication"} 
-            onPress={handleSave}
-            disabled={isLoading}
+          <Text style={styles.label}>Dosage</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. 500 mg"
+            value={dosage}
+            onChangeText={setDosage}
           />
         </View>
+
+        {/* SCHEDULE */}
+        <View style={[styles.card, shadows.low]}>
+          <Text style={styles.sectionTitle}>When should we remind you?</Text>
+
+          {schedules.map((s, i) => (
+            <View key={i} style={styles.schedule}>
+              <DateTimePicker
+                label="Time"
+                value={s.time}
+                onChange={(time) => updateSchedule(i, { time })}
+                mode="time"
+              />
+
+              <View style={styles.daysRow}>
+                {DAYS_OF_WEEK.map((d, di) => (
+                  <TouchableOpacity
+                    key={d}
+                    onPress={() => toggleDay(i, di)}
+                    style={[
+                      styles.day,
+                      s.days.includes(di) && styles.daySelected,
+                    ]}
+                  >
+                    <Text style={[
+                      styles.dayText,
+                      s.days.includes(di) && styles.dayTextSelected,
+                    ]}>
+                      {d}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {schedules.length > 1 && (
+                <TouchableOpacity onPress={() => removeSchedule(i)}>
+                  <Text style={styles.remove}>Remove time</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
+
+          <TouchableOpacity onPress={addSchedule} style={styles.addMore}>
+            <Text style={styles.addMoreText}>+ Add another time (optional)</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* OPTIONAL */}
+        <View style={[styles.card, shadows.low]}>
+          <TouchableOpacity onPress={() => setShowDetails(v => !v)}>
+            <Text style={styles.sectionTitle}>
+              Details {showDetails ? '▾' : '▸'}
+            </Text>
+          </TouchableOpacity>
+
+          {showDetails && (
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="Prescribing doctor (optional)"
+                value={doctor}
+                onChangeText={setDoctor}
+              />
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                placeholder="Notes (optional)"
+                value={notes}
+                onChangeText={setNotes}
+                multiline
+              />
+            </>
+          )}
+        </View>
+
+        <View style={{ height: 120 }} />
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tokens.colors.bg,
-  },
-  content: {
-    flexGrow: 1,
-    padding: tokens.spacing.lg,
-  },
+  container: { flex: 1, backgroundColor: tokens.colors.background },
+  keyboardView: { flex: 1 },
+  content: { padding: spacing.lg, paddingBottom: 160 },
+
   header: {
-    marginBottom: tokens.spacing.xl,
+    marginBottom: spacing.xl,
   },
-  title: {
-    fontSize: tokens.typography.h1,
-    fontWeight: '700',
-    color: tokens.colors.text,
-    marginBottom: tokens.spacing.xs,
+  title: { 
+    fontSize: 32, 
+    fontFamily: 'Caveat-SemiBold',
+    color: tokens.colors.textHandwritten,
+    marginBottom: spacing.xxs,
   },
-  subtitle: {
-    fontSize: tokens.typography.body,
+  subtitle: { 
+    fontSize: 14,
+    fontFamily: 'Nunito-Regular',
     color: tokens.colors.textMuted,
   },
-  form: {
-    flex: 1,
+
+  card: {
+    backgroundColor: tokens.colors.card,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: tokens.colors.border,
+    marginBottom: spacing.md,
+    gap: spacing.sm,
   },
-  inputGroup: {
-    marginBottom: tokens.spacing.lg,
-  },
-  label: {
-    fontSize: tokens.typography.body,
-    fontWeight: '500',
-    color: tokens.colors.text,
-    marginBottom: tokens.spacing.sm,
+
+  label: { 
+    fontSize: 14,
+    fontFamily: 'Nunito-SemiBold',
+    fontWeight: '600', 
+    color: tokens.colors.text 
   },
   input: {
-    backgroundColor: tokens.colors.card,
-    borderRadius: tokens.borderRadius.md,
-    padding: tokens.spacing.md,
-    fontSize: tokens.typography.body,
+    backgroundColor: tokens.colors.background,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: tokens.colors.border,
+    fontSize: 16,
+    fontFamily: 'Nunito-Regular',
     color: tokens.colors.text,
+  },
+  textArea: { minHeight: 80 },
+
+  sectionTitle: { 
+    fontSize: 16, 
+    fontFamily: 'Nunito-Bold',
+    fontWeight: '700', 
+    color: tokens.colors.text 
+  },
+
+  schedule: { gap: spacing.sm },
+  daysRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  day: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: tokens.colors.border,
   },
-  textArea: {
-    height: 80,
+  daySelected: { backgroundColor: tokens.colors.primary, borderColor: tokens.colors.primary },
+  dayText: { 
+    fontSize: 12, 
+    fontFamily: 'Nunito-SemiBold',
+    fontWeight: '600', 
+    color: tokens.colors.text 
   },
-  scheduleCard: {
-    backgroundColor: tokens.colors.surface,
-    borderRadius: tokens.borderRadius.md,
-    padding: tokens.spacing.md,
-    marginBottom: tokens.spacing.md,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
+  dayTextSelected: { color: tokens.colors.background },
+
+  addMore: { paddingVertical: spacing.sm },
+  addMoreText: { 
+    fontSize: 14,
+    fontFamily: 'Nunito-SemiBold',
+    color: tokens.colors.primary, 
+    fontWeight: '600' 
   },
-  scheduleHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: tokens.spacing.md,
+
+  remove: { 
+    fontSize: 12,
+    fontFamily: 'Nunito-Regular',
+    color: tokens.colors.danger 
   },
-  scheduleLabel: {
-    fontSize: tokens.typography.body,
-    fontWeight: '600',
-    color: tokens.colors.text,
-  },
-  removeButton: {
-    fontSize: tokens.typography.caption,
-    color: tokens.colors.danger,
-    fontWeight: '600',
-  },
-  timeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: tokens.spacing.md,
-  },
-  timeLabel: {
-    fontSize: tokens.typography.body,
-    color: tokens.colors.text,
-    marginRight: tokens.spacing.sm,
-  },
-  timeInput: {
-    flex: 1,
-    maxWidth: 100,
-  },
-  daysContainer: {
-    marginTop: tokens.spacing.sm,
-  },
-  daysLabel: {
-    fontSize: tokens.typography.body,
-    color: tokens.colors.text,
-    marginBottom: tokens.spacing.sm,
-  },
-  daysRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: tokens.spacing.xs,
-  },
-  dayButton: {
-    paddingVertical: tokens.spacing.xs,
-    paddingHorizontal: tokens.spacing.sm,
-    borderRadius: tokens.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    backgroundColor: tokens.colors.card,
-    minWidth: 40,
-    alignItems: 'center',
-  },
-  dayButtonSelected: {
-    backgroundColor: tokens.colors.primary,
-    borderColor: tokens.colors.primary,
-  },
-  dayButtonText: {
-    fontSize: tokens.typography.caption,
-    color: tokens.colors.text,
-    fontWeight: '600',
-  },
-  dayButtonTextSelected: {
-    color: tokens.colors.bg,
-  },
-  addScheduleButton: {
-    paddingVertical: tokens.spacing.md,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    borderStyle: 'dashed',
-    borderRadius: tokens.borderRadius.md,
-  },
-  addScheduleText: {
-    fontSize: tokens.typography.body,
-    color: tokens.colors.primary,
-    fontWeight: '600',
-  },
-  footer: {
-    paddingTop: tokens.spacing.lg,
-  },
-  disclaimer: {
-    marginTop: tokens.spacing.md,
-    fontSize: tokens.typography.caption,
-    color: tokens.colors.textMuted,
+
+  stickyFooter: {
+    position: 'absolute',
+    left: spacing.lg,
+    right: spacing.lg,
+    bottom: spacing.lg,
+    zIndex: 10,
   },
 });

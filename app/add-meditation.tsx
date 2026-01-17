@@ -1,310 +1,276 @@
 import BigButton from '@/components/BigButton';
-import { tokens } from '@/constants/theme';
+import DateTimePicker from '@/components/DateTimePicker';
+import { borderRadius, shadows, spacing, tokens } from '@/constants/theme';
 import { createMeditationRoutine, saveMeditationLog } from '@/services/db';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
-const MEDITATION_TYPES = ['Mindfulness', 'Breathing', 'Body Scan', 'Loving Kindness', 'Walking', 'Guided'];
 const DURATION_OPTIONS = [5, 10, 15, 20, 30, 45, 60];
 
 export default function AddMeditationScreen() {
   const router = useRouter();
+
+  // Session (primary)
+  const [duration, setDuration] = useState<number>(10);
+  const [sessionDate, setSessionDate] = useState(new Date());
+  const [notes, setNotes] = useState('');
+
+  // Optional routine
+  const [showRoutine, setShowRoutine] = useState(false);
   const [routineName, setRoutineName] = useState('');
   const [targetMinutes, setTargetMinutes] = useState<number>(10);
-  const [notes, setNotes] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [mode, setMode] = useState<'routine' | 'session'>('routine');
 
-  const handleSaveRoutine = async () => {
-    if (!routineName.trim()) {
-      Alert.alert('Error', 'Please enter a routine name');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (!duration) {
+      Alert.alert('Missing duration', 'How long was your session?');
       return;
     }
 
-    setIsLoading(true);
+    setIsSaving(true);
     try {
-      await createMeditationRoutine({
-        name: routineName.trim(),
-        target_minutes: targetMinutes,
-        notes: notes.trim() || undefined,
-      });
-      
-      Alert.alert('Success', 'Meditation routine added! Track your daily practice.', [
-        { text: 'OK', onPress: () => router.push('/(tabs)') }
-      ]);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save meditation routine. Please try again.');
-      console.error('Error saving meditation routine:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSaveSession = async () => {
-    if (!targetMinutes) {
-      Alert.alert('Error', 'Please select a duration');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      await saveMeditationLog({ 
-        duration: targetMinutes,
+      // Always save the session
+      await saveMeditationLog({
+        duration,
         meditation_type: 'Mindfulness',
-        note: notes.trim(),
-        session_date: Date.now(),
+        note: notes.trim() || undefined,
+        session_date: sessionDate.getTime(),
       });
-      
-      Alert.alert('Success', 'Meditation session logged!', [
-        { text: 'OK', onPress: () => router.back() }
+
+      // Optionally create routine
+      if (showRoutine && routineName.trim()) {
+        await createMeditationRoutine({
+          name: routineName.trim(),
+          target_minutes: targetMinutes,
+          notes: undefined,
+        });
+      }
+
+      Alert.alert('Saved', 'Meditation logged.', [
+        { text: 'OK', onPress: () => router.back() },
       ]);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save meditation session. Please try again.');
-      console.error('Error saving meditation session:', error);
+    } catch (e) {
+      Alert.alert('Error', 'Could not save meditation.');
+      console.error(e);
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <View style={styles.stickyFooter}>
+          <BigButton
+            title={isSaving ? 'Saving…' : 'Save'}
+            onPress={handleSave}
+            disabled={isSaving}
+          />
+        </View>
+
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
+        >
         <View style={styles.header}>
-          <Text style={styles.title}>Add Meditation</Text>
-          <Text style={styles.subtitle}>
-            {mode === 'routine' ? 'Create a daily meditation routine' : 'Log a meditation session'}
-          </Text>
+          <Text style={styles.title}>Meditation</Text>
+          <Text style={styles.subtitle}>Log your practice.</Text>
         </View>
 
-        <View style={styles.modeSelector}>
-          <TouchableOpacity
-            style={[styles.modeButton, mode === 'routine' && styles.modeButtonSelected]}
-            onPress={() => setMode('routine')}
-          >
-            <Text style={[styles.modeButtonText, mode === 'routine' && styles.modeButtonTextSelected]}>
-              Create Routine
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.modeButton, mode === 'session' && styles.modeButtonSelected]}
-            onPress={() => setMode('session')}
-          >
-            <Text style={[styles.modeButtonText, mode === 'session' && styles.modeButtonTextSelected]}>
-              Log Session
-            </Text>
-          </TouchableOpacity>
+        {/* SESSION */}
+        <View style={[styles.card, shadows.low]}>
+          <Text style={styles.sectionTitle}>How long did you meditate?</Text>
+          <View style={styles.durationRow}>
+            {DURATION_OPTIONS.map((m) => (
+              <TouchableOpacity
+                key={m}
+                onPress={() => setDuration(m)}
+                style={[
+                  styles.durationChip,
+                  duration === m && styles.durationChipSelected,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.durationText,
+                    duration === m && styles.durationTextSelected,
+                  ]}
+                >
+                  {m}m
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <DateTimePicker
+            label="When"
+            value={sessionDate}
+            onChange={setSessionDate}
+            mode="datetime"
+          />
         </View>
 
-        {mode === 'routine' ? (
-          <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Routine Name *</Text>
+        {/* NOTES */}
+        <View style={[styles.card, shadows.low]}>
+          <Text style={styles.sectionTitle}>Reflection (optional)</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            placeholder="How did it feel?"
+            value={notes}
+            onChangeText={setNotes}
+            multiline
+          />
+        </View>
+
+        {/* ROUTINE */}
+        <View style={[styles.card, shadows.low]}>
+          <TouchableOpacity onPress={() => setShowRoutine(v => !v)}>
+            <Text style={styles.sectionTitle}>
+              Make this a routine {showRoutine ? '▾' : '▸'}
+            </Text>
+          </TouchableOpacity>
+
+          {showRoutine && (
+            <>
               <TextInput
                 style={styles.input}
+                placeholder="Routine name (e.g. Morning Calm)"
                 value={routineName}
                 onChangeText={setRoutineName}
-                placeholder="e.g., Morning Meditation, Evening Calm"
               />
-            </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Target Minutes Per Day *</Text>
-              <View style={styles.durationContainer}>
-                {DURATION_OPTIONS.map((minutes) => (
+              <Text style={styles.label}>Daily target</Text>
+              <View style={styles.durationRow}>
+                {DURATION_OPTIONS.map((m) => (
                   <TouchableOpacity
-                    key={minutes}
+                    key={m}
+                    onPress={() => setTargetMinutes(m)}
                     style={[
-                      styles.durationButton,
-                      targetMinutes === minutes && styles.durationButtonSelected
+                      styles.durationChip,
+                      targetMinutes === m && styles.durationChipSelected,
                     ]}
-                    onPress={() => setTargetMinutes(minutes)}
                   >
-                    <Text style={[
-                      styles.durationButtonText,
-                      targetMinutes === minutes && styles.durationButtonTextSelected
-                    ]}>
-                      {minutes}m
+                    <Text
+                      style={[
+                        styles.durationText,
+                        targetMinutes === m && styles.durationTextSelected,
+                      ]}
+                    >
+                      {m}m
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
-            </View>
+            </>
+          )}
+        </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Notes</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={notes}
-                onChangeText={setNotes}
-                placeholder="Any additional notes about this routine..."
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-              />
-            </View>
-
-            <View style={styles.footer}>
-              <BigButton 
-                title={isLoading ? "Saving..." : "Create Routine"} 
-                onPress={handleSaveRoutine}
-                disabled={isLoading}
-              />
-            </View>
-          </View>
-        ) : (
-          <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Duration (minutes) *</Text>
-              <View style={styles.durationContainer}>
-                {DURATION_OPTIONS.map((minutes) => (
-                  <TouchableOpacity
-                    key={minutes}
-                    style={[
-                      styles.durationButton,
-                      targetMinutes === minutes && styles.durationButtonSelected
-                    ]}
-                    onPress={() => setTargetMinutes(minutes)}
-                  >
-                    <Text style={[
-                      styles.durationButtonText,
-                      targetMinutes === minutes && styles.durationButtonTextSelected
-                    ]}>
-                      {minutes}m
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Notes</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={notes}
-                onChangeText={setNotes}
-                placeholder="How did the session go? Any insights or observations..."
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-              />
-            </View>
-
-            <View style={styles.footer}>
-              <BigButton 
-                title={isLoading ? "Saving..." : "Save Session"} 
-                onPress={handleSaveSession}
-                disabled={isLoading}
-              />
-            </View>
-          </View>
-        )}
+        <View style={{ height: 120 }} />
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tokens.colors.bg,
-  },
-  content: {
-    flexGrow: 1,
-    padding: tokens.spacing.lg,
-  },
+  container: { flex: 1, backgroundColor: tokens.colors.background },
+  keyboardView: { flex: 1 },
+  content: { padding: spacing.lg, paddingBottom: 160 },
+
   header: {
-    marginBottom: tokens.spacing.xl,
+    marginBottom: spacing.xl,
   },
-  title: {
-    fontSize: tokens.typography.h1,
-    fontWeight: '700',
-    color: tokens.colors.text,
-    marginBottom: tokens.spacing.xs,
+  title: { 
+    fontSize: 32, 
+    fontFamily: 'Caveat-SemiBold',
+    color: tokens.colors.textHandwritten,
+    marginBottom: spacing.xxs,
   },
-  subtitle: {
-    fontSize: tokens.typography.body,
+  subtitle: { 
+    fontSize: 14,
+    fontFamily: 'Nunito-Regular',
     color: tokens.colors.textMuted,
   },
-  modeSelector: {
-    flexDirection: 'row',
-    gap: tokens.spacing.sm,
-    marginBottom: tokens.spacing.xl,
-  },
-  modeButton: {
-    flex: 1,
-    paddingVertical: tokens.spacing.md,
-    paddingHorizontal: tokens.spacing.md,
-    borderRadius: tokens.borderRadius.md,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    backgroundColor: tokens.colors.surface,
-    alignItems: 'center',
-  },
-  modeButtonSelected: {
-    backgroundColor: tokens.colors.primary,
-    borderColor: tokens.colors.primary,
-  },
-  modeButtonText: {
-    fontSize: tokens.typography.body,
-    color: tokens.colors.text,
-    fontWeight: '600',
-  },
-  modeButtonTextSelected: {
-    color: tokens.colors.bg,
-  },
-  form: {
-    flex: 1,
-  },
-  inputGroup: {
-    marginBottom: tokens.spacing.lg,
-  },
-  label: {
-    fontSize: tokens.typography.body,
-    fontWeight: '500',
-    color: tokens.colors.text,
-    marginBottom: tokens.spacing.sm,
-  },
-  durationContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: tokens.spacing.sm,
-  },
-  durationButton: {
+
+  card: {
     backgroundColor: tokens.colors.card,
-    borderRadius: tokens.borderRadius.md,
-    paddingHorizontal: tokens.spacing.md,
-    paddingVertical: tokens.spacing.sm,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
     borderWidth: 1,
     borderColor: tokens.colors.border,
-    minWidth: 60,
-    alignItems: 'center',
+    marginBottom: spacing.md,
+    gap: spacing.sm,
   },
-  durationButtonSelected: {
-    backgroundColor: tokens.colors.primary,
-    borderColor: tokens.colors.primary,
+
+  sectionTitle: { 
+    fontSize: 16, 
+    fontFamily: 'Nunito-Bold',
+    fontWeight: '700', 
+    color: tokens.colors.text 
   },
-  durationButtonText: {
-    fontSize: tokens.typography.body,
-    color: tokens.colors.text,
-    fontWeight: '600',
+  label: { 
+    fontSize: 14, 
+    fontFamily: 'Nunito-SemiBold',
+    fontWeight: '600', 
+    color: tokens.colors.text 
   },
-  durationButtonTextSelected: {
-    color: tokens.colors.bg,
-  },
+
   input: {
-    backgroundColor: tokens.colors.card,
-    borderRadius: tokens.borderRadius.md,
-    padding: tokens.spacing.md,
-    fontSize: tokens.typography.body,
+    backgroundColor: tokens.colors.background,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: tokens.colors.border,
+    fontSize: 16,
+    fontFamily: 'Nunito-Regular',
     color: tokens.colors.text,
+  },
+  textArea: { minHeight: 80 },
+
+  durationRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  durationChip: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.full,
     borderWidth: 1,
     borderColor: tokens.colors.border,
   },
-  textArea: {
-    height: 100,
+  durationChipSelected: {
+    backgroundColor: tokens.colors.primary,
+    borderColor: tokens.colors.primary,
   },
-  footer: {
-    paddingTop: tokens.spacing.lg,
+  durationText: { 
+    fontSize: 14,
+    fontFamily: 'Nunito-SemiBold',
+    fontWeight: '600', 
+    color: tokens.colors.text 
+  },
+  durationTextSelected: { color: tokens.colors.background },
+
+  stickyFooter: {
+    position: 'absolute',
+    left: spacing.lg,
+    right: spacing.lg,
+    bottom: spacing.lg,
+    zIndex: 10,
   },
 });

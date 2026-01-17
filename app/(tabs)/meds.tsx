@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemePreference } from '@/hooks/use-theme-preference';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
 export default function TrackersScreen() {
   const router = useRouter();

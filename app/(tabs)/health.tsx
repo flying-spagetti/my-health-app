@@ -20,6 +20,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
 import { useThemePreference } from '@/hooks/use-theme-preference';
 import { 
@@ -94,7 +95,7 @@ export default function HealthScreen() {
   const statCards = [
     {
       id: 'bp',
-      icon: 'heart.fill',
+      icon: 'heartbeat',
       iconColor: tokens.colors.danger,
       label: 'Blood Pressure',
       value: latestBP ? `${latestBP.systolic}/${latestBP.diastolic}` : '---',
@@ -102,7 +103,7 @@ export default function HealthScreen() {
     },
     {
       id: 'meds',
-      icon: 'pills.fill',
+      icon: 'pills',
       iconColor: tokens.colors.primary,
       label: 'Medications',
       value: `${medications.length} active`,
@@ -110,7 +111,7 @@ export default function HealthScreen() {
     },
     {
       id: 'migraines',
-      icon: 'bolt.fill',
+      icon: 'brain',
       iconColor: tokens.colors.warning,
       label: 'Migraines',
       value: `${migraineCount} this month`,
@@ -161,7 +162,7 @@ export default function HealthScreen() {
               onPress={stat.onPress}
               activeOpacity={0.7}
             >
-              <IconSymbol name={stat.icon} size={24} color={stat.iconColor} />
+              <FontAwesome5 name={stat.icon} size={24} color={stat.iconColor} />
               <Text style={[styles.statValue, { color: tokens.colors.text }]}>
                 {stat.value}
               </Text>
@@ -272,7 +273,7 @@ export default function HealthScreen() {
               onPress={() => router.push('/add-bp')}
               activeOpacity={0.7}
             >
-              <IconSymbol name="heart.fill" size={24} color={tokens.colors.danger} />
+              <FontAwesome5 name="heartbeat" size={24} color={tokens.colors.danger} />
               <Text style={[styles.quickActionText, { color: tokens.colors.text }]}>
                 Log BP
               </Text>
@@ -283,7 +284,7 @@ export default function HealthScreen() {
               onPress={() => router.push('/add-migraine')}
               activeOpacity={0.7}
             >
-              <IconSymbol name="bolt.fill" size={24} color={tokens.colors.warning} />
+              <FontAwesome5 name="brain" size={24} color={tokens.colors.warning} />
               <Text style={[styles.quickActionText, { color: tokens.colors.text }]}>
                 Log Migraine
               </Text>
@@ -294,7 +295,7 @@ export default function HealthScreen() {
               onPress={() => router.push('/add-appointment')}
               activeOpacity={0.7}
             >
-              <IconSymbol name="calendar.badge.plus" size={24} color={tokens.colors.teal} />
+              <FontAwesome5 name="calendar-alt" size={24} color={tokens.colors.teal} />
               <Text style={[styles.quickActionText, { color: tokens.colors.text }]}>
                 Add Appt
               </Text>
@@ -349,7 +350,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito-Regular',
   },
   section: {
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
+    
   },
   sectionHeader: {
     flexDirection: 'row',

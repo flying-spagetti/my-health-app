@@ -5,6 +5,10 @@ import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { getThemeTokens, shadows, borderRadius } from '@/constants/theme';
 import { useThemePreference } from '@/hooks/use-theme-preference';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import Entypo from '@expo/vector-icons/Entypo';
+import Feather from '@expo/vector-icons/Feather';
 
 export default function TabLayout() {
   const { colorScheme } = useThemePreference();
@@ -41,9 +45,9 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <IconSymbol 
+            <Entypo 
               size={24} 
-              name={focused ? 'house.fill' : 'house'} 
+              name={"home"} 
               color={color} 
             />
           ),
@@ -56,9 +60,9 @@ export default function TabLayout() {
         options={{
           title: 'Mood',
           tabBarIcon: ({ color, focused }) => (
-            <IconSymbol 
+            <MaterialIcons 
               size={24} 
-              name={focused ? 'face.smiling.fill' : 'face.smiling'} 
+              name={"mood"} 
               color={color} 
             />
           ),
@@ -71,9 +75,9 @@ export default function TabLayout() {
         options={{
           title: 'Wellness',
           tabBarIcon: ({ color, focused }) => (
-            <IconSymbol 
+            <FontAwesome5 
               size={24} 
-              name={focused ? 'leaf.fill' : 'leaf'} 
+              name={"peace"} 
               color={color} 
             />
           ),
@@ -86,9 +90,9 @@ export default function TabLayout() {
         options={{
           title: 'Health',
           tabBarIcon: ({ color, focused }) => (
-            <IconSymbol 
-              size={24} 
-              name={focused ? 'heart.fill' : 'heart'} 
+            <MaterialIcons 
+              size={20} 
+              name={"health-and-safety"} 
               color={color} 
             />
           ),
@@ -101,9 +105,9 @@ export default function TabLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
-            <IconSymbol 
+            <Feather 
               size={24} 
-              name={focused ? 'person.fill' : 'person'} 
+              name={"user"} 
               color={color} 
             />
           ),
