@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: tokens.colors.cardSecondary,
-    borderRadius: borderRadius.lg,
+    borderRadius: tokens.borderRadius.lg,
     padding: spacing.md,
     fontSize: 16,
     fontFamily: 'Nunito-Regular',

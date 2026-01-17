@@ -1,11 +1,12 @@
 import { initDb } from '@/services/db';
-import { rescheduleAllReminders } from '@/services/reminders';
+import { rescheduleAllReminders, clearBadge, incrementBadge } from '@/services/reminders';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
-import { useCallback, useEffect, useState } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import * as Notifications from 'expo-notifications';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { View, ActivityIndicator, StyleSheet, AppState } from 'react-native';
 import 'react-native-reanimated';
 
 import { darkTheme, lightTheme, getThemeTokens } from '@/constants/theme';
@@ -23,6 +24,9 @@ function RootLayoutInner() {
   const { colorScheme } = useThemePreference();
   const { fontsLoaded, fontError } = useFonts();
   const [appIsReady, setAppIsReady] = useState(false);
+  const router = useRouter();
+  const notificationListener = useRef<Notifications.Subscription>();
+  const responseListener = useRef<Notifications.Subscription>();
 
   useEffect(() => {
     async function prepare() {
@@ -43,6 +47,58 @@ function RootLayoutInner() {
     }
 
     prepare();
+  }, []);
+
+  // Set up notification listeners
+  useEffect(() => {
+    // This listener is fired whenever a notification is received while the app is foregrounded
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      console.log('Notification received:', notification);
+      // Increment badge count when notification is received while app is in foreground
+      incrementBadge().catch(console.error);
+    });
+
+    // This listener is fired whenever a user taps on or interacts with a notification
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('Notification response:', response);
+      const data = response.notification.request.content.data;
+      
+      // Clear badge when user interacts with notification
+      clearBadge().catch(console.error);
+      
+      // Navigate based on notification type
+      if (data?.type === 'medication' || data?.type === 'supplement') {
+        router.push('/med-tracker');
+      } else if (data?.type === 'appointment') {
+        router.push('/appointment-tracker');
+      } else if (data?.type === 'meditation') {
+        router.push('/meditation-tracker');
+      }
+    });
+
+    // Clean up listeners on unmount
+    return () => {
+      if (notificationListener.current) {
+        Notifications.removeNotificationSubscription(notificationListener.current);
+      }
+      if (responseListener.current) {
+        Notifications.removeNotificationSubscription(responseListener.current);
+      }
+    };
+  }, [router]);
+
+  // Clear badge count when app comes to foreground
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (nextAppState === 'active') {
+        // Clear badge when app is opened
+        clearBadge().catch(console.error);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   const onLayoutRootView = useCallback(async () => {
@@ -226,6 +282,15 @@ function RootLayoutInner() {
               title: 'Appointments',
               headerShown: true,
             }} 
+          />
+          
+          {/* Doctor Visit Summary */}
+          <Stack.Screen
+            name="doctor-visit"
+            options={{
+              title: 'Doctor Visit Summary',
+              headerShown: true,
+            }}
           />
         </Stack>
         <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />

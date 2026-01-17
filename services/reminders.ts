@@ -1,6 +1,7 @@
 // services/reminders.ts
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 import { getMedications, getSupplements, getAppointments, getDoseSchedulesByParent, getMeditationRoutines } from './db';
 
 // Check if we're in Expo Go (where notifications have limitations)
@@ -21,6 +22,50 @@ try {
   console.warn('Could not set notification handler:', error);
 }
 
+// Set up Android notification channels (required for Android 8.0+)
+async function setupAndroidChannels() {
+  if (Platform.OS === 'android') {
+    try {
+      // Medication & Supplement channel
+      await Notifications.setNotificationChannelAsync('medications', {
+        name: 'Medications & Supplements',
+        importance: Notifications.AndroidImportance.HIGH,
+        vibrationPattern: [0, 250, 250, 250],
+        sound: 'default',
+        enableVibrate: true,
+        showBadge: true,
+        description: 'Reminders for your medications and supplements',
+      });
+
+      // Appointments channel
+      await Notifications.setNotificationChannelAsync('appointments', {
+        name: 'Appointments',
+        importance: Notifications.AndroidImportance.HIGH,
+        vibrationPattern: [0, 250, 250, 250],
+        sound: 'default',
+        enableVibrate: true,
+        showBadge: true,
+        description: 'Reminders for your doctor appointments',
+      });
+
+      // Meditation channel
+      await Notifications.setNotificationChannelAsync('meditation', {
+        name: 'Meditation',
+        importance: Notifications.AndroidImportance.DEFAULT,
+        vibrationPattern: [0, 250, 250, 250],
+        sound: 'default',
+        enableVibrate: true,
+        showBadge: true,
+        description: 'Reminders for your meditation practice',
+      });
+
+      console.log('Android notification channels set up successfully');
+    } catch (error) {
+      console.error('Error setting up Android notification channels:', error);
+    }
+  }
+}
+
 // Flag to prevent concurrent scheduling
 let isScheduling = false;
 let lastScheduleTime = 0;
@@ -34,11 +79,27 @@ export async function requestNotificationPermissions(): Promise<boolean> {
   }
   
   try {
+    // Set up Android channels first
+    await setupAndroidChannels();
+    
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
     
     if (existingStatus !== 'granted') {
       const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    
+    // For iOS, request provisional permissions if not granted
+    if (Platform.OS === 'ios' && finalStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync({
+        ios: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
+          allowAnnouncements: true,
+        },
+      });
       finalStatus = status;
     }
     
@@ -108,6 +169,10 @@ async function scheduleDoseReminders(
             parentId,
             scheduleId,
           },
+          ...(Platform.OS === 'android' && {
+            channelId: 'medications',
+            priority: Notifications.AndroidNotificationPriority.HIGH,
+          }),
         },
         trigger: { type: 'date', date: triggerDate },
       });
@@ -139,6 +204,10 @@ async function scheduleAppointmentReminders() {
               type: 'appointment',
               appointmentId: apt.id,
             },
+            ...(Platform.OS === 'android' && {
+              channelId: 'appointments',
+              priority: Notifications.AndroidNotificationPriority.HIGH,
+            }),
           },
           trigger: { type: 'date', date: reminderDate },
         });
@@ -161,6 +230,10 @@ async function scheduleAppointmentReminders() {
               type: 'appointment',
               appointmentId: apt.id,
             },
+            ...(Platform.OS === 'android' && {
+              channelId: 'appointments',
+              priority: Notifications.AndroidNotificationPriority.HIGH,
+            }),
           },
           trigger: { type: 'date', date: hourReminder },
         });
@@ -203,6 +276,10 @@ async function scheduleMeditationReminders() {
           data: {
             type: 'meditation',
           },
+          ...(Platform.OS === 'android' && {
+            channelId: 'meditation',
+            priority: Notifications.AndroidNotificationPriority.DEFAULT,
+          }),
         },
         trigger: { type: 'date', date: reminderDate },
       });
@@ -434,5 +511,62 @@ export async function cancelItemReminders(
     }
   } catch (error) {
     console.error('Error cancelling item reminders:', error);
+  }
+}
+
+// Badge management functions
+export async function setBadgeCount(count: number) {
+  try {
+    await Notifications.setBadgeCountAsync(count);
+  } catch (error) {
+    console.error('Error setting badge count:', error);
+  }
+}
+
+export async function getBadgeCount(): Promise<number> {
+  try {
+    return await Notifications.getBadgeCountAsync();
+  } catch (error) {
+    console.error('Error getting badge count:', error);
+    return 0;
+  }
+}
+
+export async function clearBadge() {
+  try {
+    await Notifications.setBadgeCountAsync(0);
+  } catch (error) {
+    console.error('Error clearing badge:', error);
+  }
+}
+
+export async function incrementBadge() {
+  try {
+    const current = await Notifications.getBadgeCountAsync();
+    await Notifications.setBadgeCountAsync(current + 1);
+  } catch (error) {
+    console.error('Error incrementing badge:', error);
+  }
+}
+
+// Get all scheduled notifications (useful for debugging)
+export async function getScheduledNotificationsCount(): Promise<number> {
+  try {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    return scheduled.length;
+  } catch (error) {
+    console.error('Error getting scheduled notifications:', error);
+    return 0;
+  }
+}
+
+// Get scheduled notifications by type
+export async function getScheduledNotificationsByType(type: string) {
+  try {
+    const allNotifications = await Notifications.getAllScheduledNotificationsAsync();
+    return allNotifications.filter(n => n.content.data?.type === type);
+  } catch (error) {
+    console.error('Error getting scheduled notifications by type:', error);
+    return [];
   }
 }

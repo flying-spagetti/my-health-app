@@ -641,6 +641,64 @@ export function getBPReadings(): Promise<any[]> {
   });
 }
 
+export function getMigraineEntriesInRange(startMs: number, endMs: number): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    try {
+      const result = db.getAllSync(
+        `SELECT * FROM migraine_readings WHERE started_at >= ? AND started_at <= ? ORDER BY started_at DESC`,
+        [startMs, endMs]
+      );
+      resolve(result || []);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getBpReadingsInRange(startMs: number, endMs: number): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    try {
+      const result = db.getAllSync(
+        `SELECT * FROM bp_readings WHERE measured_at >= ? AND measured_at <= ? ORDER BY measured_at DESC`,
+        [startMs, endMs]
+      );
+      resolve(result || []);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getMeditationLogsInRange(startMs: number, endMs: number): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    try {
+      const result = db.getAllSync(
+        `SELECT * FROM meditation_sessions WHERE session_date >= ? AND session_date <= ? ORDER BY session_date DESC`,
+        [startMs, endMs]
+      );
+      resolve(result || []);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getMedicationsAndSchedules(): Promise<{ medications: any[]; schedules: any[] }> {
+  return new Promise((resolve, reject) => {
+    try {
+      const medications = db.getAllSync(
+        `SELECT * FROM medications ORDER BY COALESCE(start_date, created_at) DESC`
+      );
+      const schedules = db.getAllSync(
+        `SELECT * FROM dose_schedules WHERE parent_type = 'medication' ORDER BY time_of_day ASC`
+      );
+      resolve({ medications: medications || [], schedules: schedules || [] });
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
 export function saveJournalEntry(entry: {
   mood?: string;
   mood_intensity?: number | null;

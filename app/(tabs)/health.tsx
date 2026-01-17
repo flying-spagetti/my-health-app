@@ -8,36 +8,36 @@
  * - Quick action buttons
  */
 
-import React, { useState, useCallback } from 'react';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import { useFocusEffect } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import {
-  View,
-  Text,
+  RefreshControl,
   ScrollView,
   StyleSheet,
+  Text,
   TouchableOpacity,
-  RefreshControl,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
-import { useThemePreference } from '@/hooks/use-theme-preference';
-import { 
-  getThemeTokens, 
-  getScreenBackground,
-  spacing,
-  borderRadius,
-  shadows,
-} from '@/constants/theme';
-import { 
-  getMedications, 
-  getSupplements, 
-  getLatestBP,
-  getMigraineReadings,
-  getAppointments,
-} from '@/services/db';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import {
+  borderRadius,
+  getScreenBackground,
+  getThemeTokens,
+  shadows,
+  spacing,
+} from '@/constants/theme';
+import { useThemePreference } from '@/hooks/use-theme-preference';
+import {
+  getAppointments,
+  getLatestBP,
+  getMedications,
+  getMigraineReadings,
+  getSupplements,
+} from '@/services/db';
 
 export default function HealthScreen() {
   const router = useRouter();
@@ -301,6 +301,31 @@ export default function HealthScreen() {
               </Text>
             </TouchableOpacity>
           </View>
+        </View>
+
+        {/* Doctor Tools */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: tokens.colors.textHandwritten }]}>
+            Doctor Tools
+          </Text>
+          <TouchableOpacity
+            style={[styles.itemCard, { backgroundColor: tokens.colors.card }, shadows.low]}
+            onPress={() => router.push('/doctor-visit')}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.itemIcon, { backgroundColor: tokens.colors.primary + '20' }]}>
+              <FontAwesome5 name="notes-medical" size={20} color={tokens.colors.primary} />
+            </View>
+            <View style={styles.itemContent}>
+              <Text style={[styles.itemName, { color: tokens.colors.text }]}>
+                Doctor Visit Summary
+              </Text>
+              <Text style={[styles.itemDetail, { color: tokens.colors.textMuted }]}>
+                Export-friendly clinical snapshot
+              </Text>
+            </View>
+            <IconSymbol name="chevron.right" size={18} color={tokens.colors.textMuted} />
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>

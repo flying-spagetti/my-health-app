@@ -152,10 +152,7 @@ export default function ProfileScreen() {
   };
 
   const handleExportData = () => {
-    Alert.alert(
-      'Coming Soon',
-      'Data export (CSV/JSON) inka cheyaledhu kada ra.',
-    );
+    router.push('/doctor-visit');
   };
 
   const handleBiometricSettings = () => {
@@ -411,7 +408,7 @@ export default function ProfileScreen() {
               <IconSymbol name="square.and.arrow.up" size={18} color={tokens.colors.accent} />
             </View>
             <View style={styles.settingContent}>
-              <Text style={[styles.settingTitle, { color: tokens.colors.text }]}>
+                <Text style={[styles.settingTitle, { color: tokens.colors.text }]} onPress={() => router.push('/doctor-visit')}>
                 Export Data
               </Text>
               <Text style={[styles.settingSubtitle, { color: tokens.colors.textMuted }]}>
