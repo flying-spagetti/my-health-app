@@ -393,7 +393,7 @@ export function initDb() {
         }
       }
     } catch (error) {
-      console.log('Migration for medications table:', error);
+      // Migration for medications table
     }
 
     try {
@@ -411,7 +411,7 @@ export function initDb() {
         }
       }
     } catch (error) {
-      console.log('Migration for supplements table:', error);
+      // Migration for supplements table
     }
 
     try {
@@ -429,7 +429,7 @@ export function initDb() {
         }
       }
     } catch (error) {
-      console.log('Migration for meditation_routines table:', error);
+      // Migration for meditation_routines table
     }
 
     try {
@@ -440,7 +440,7 @@ export function initDb() {
         db.execSync(`ALTER TABLE meditation_sessions ADD COLUMN routine_id TEXT;`);
       }
     } catch (error) {
-      console.log('Migration for meditation_sessions table:', error);
+      // Migration for meditation_sessions table
     }
 
     try {
@@ -475,13 +475,13 @@ export function initDb() {
             try {
               db.execSync(`ALTER TABLE journals ADD COLUMN ${col.name} ${col.type};`);
             } catch (err) {
-              console.log(`Error adding column ${col.name}:`, err);
+              // Error adding column
             }
           }
         }
       }
     } catch (error) {
-      console.log('Migration for journals table:', error);
+      // Migration for journals table
     }
 
     try {
@@ -571,13 +571,13 @@ export function initDb() {
             try {
               db.execSync(`ALTER TABLE migraine_readings ADD COLUMN ${col.name} ${col.type};`);
             } catch (err) {
-              console.log(`Error adding migraine column ${col.name}:`, err);
+              // Error adding migraine column
             }
           }
         }
       }
     } catch (error) {
-      console.log('Migration for migraine_readings table:', error);
+      // Migration for migraine_readings table
     }
 
     // Create indexes for better performance
@@ -593,16 +593,15 @@ export function initDb() {
       db.execSync(`CREATE INDEX IF NOT EXISTS idx_supplements_active ON supplements(is_active, start_date);`);
     } catch (error) {
       // Indexes might fail if columns don't exist yet, that's okay
-      console.log('Index creation:', error);
     }
     
     db.execSync(`CREATE INDEX IF NOT EXISTS idx_dose_schedules_parent ON dose_schedules(parent_type, parent_id);`);
     db.execSync(`CREATE INDEX IF NOT EXISTS idx_tracking_events_parent ON tracking_events(parent_type, parent_id, event_date);`);
     db.execSync(`CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(appointment_date, is_completed);`);
 
-    console.log('Database initialized successfully');
+    // Database initialized successfully
   } catch (error) {
-    console.error('Error initializing database:', error);
+    // Error initializing database
   }
 }
 
@@ -1253,7 +1252,6 @@ export function getTodaySummary(): Promise<{ steps: number; bp?: { s: number; d:
         bp: latest ? { s: latest.systolic, d: latest.diastolic } : undefined,
       });
     } catch (error) {
-      console.error('Error getting today summary:', error);
       resolve({ steps: 0 });
     }
   });
@@ -1683,13 +1681,6 @@ export async function createTrackingEvent(event: {
 }): Promise<string> {
   try {
     const id = generateId();
-    console.log('Creating tracking event:', {
-      id,
-      parent_type: event.parent_type,
-      parent_id: event.parent_id,
-      schedule_id: event.schedule_id,
-      event_type: event.event_type,
-    });
     
     db.runSync(
       `INSERT INTO tracking_events (id, parent_type, parent_id, schedule_id, event_type, event_date, event_time, metadata)
@@ -1706,10 +1697,8 @@ export async function createTrackingEvent(event: {
       ]
     );
     
-    console.log('Tracking event created successfully:', id);
     return id;
   } catch (error) {
-    console.error('Error creating tracking event:', error);
     throw error;
   }
 }
@@ -1725,12 +1714,6 @@ export async function deleteTrackingEvent(params: {
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(params.event_date);
     endOfDay.setHours(23, 59, 59, 999);
-    
-    console.log('Deleting tracking event:', {
-      parent_id: params.parent_id,
-      schedule_id: params.schedule_id,
-      event_type: params.event_type,
-    });
     
     let query = `DELETE FROM tracking_events 
                  WHERE parent_id = ? 
@@ -1749,9 +1732,7 @@ export async function deleteTrackingEvent(params: {
     }
     
     db.runSync(query, queryParams);
-    console.log('Tracking event deleted successfully');
   } catch (error) {
-    console.error('Error deleting tracking event:', error);
     throw error;
   }
 }

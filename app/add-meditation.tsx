@@ -64,7 +64,7 @@ export default function AddMeditationScreen() {
       ]);
     } catch (e) {
       Alert.alert('Error', 'Could not save meditation.');
-      console.error(e);
+      // Removed for production.error(e);
     } finally {
       setIsSaving(false);
     }

@@ -1,17 +1,17 @@
-import { borderRadius, getThemeTokens, shadows, spacing, tokens } from '@/constants/theme';
+import { borderRadius, getThemeTokens, shadows, spacing } from '@/constants/theme';
 import { useThemePreference } from '@/hooks/use-theme-preference';
 import { getMigraineReadings } from '@/services/db';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  Alert,
-  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -383,7 +383,7 @@ export default function MigraineTrackerScreen() {
         setPatterns(null);
       }
     } catch (error) {
-      console.error('Error loading migraine data:', error);
+      // Removed for production.error('Error loading migraine data:', error);
     } finally {
       setIsLoading(false);
     }

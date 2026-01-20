@@ -50,7 +50,7 @@ export default function AddBPScreen() {
       ]);
     } catch (error) {
       Alert.alert('Error', 'Failed to save reading. Please try again.');
-      console.error('Error saving BP reading:', error);
+      // Removed for production.error('Error saving BP reading:', error);
     } finally {
       setIsLoading(false);
     }

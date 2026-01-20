@@ -6,16 +6,16 @@ import { rescheduleAllReminders } from '@/services/reminders';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -110,7 +110,7 @@ export default function AddMedicationScreen() {
       ]);
     } catch (e) {
       Alert.alert('Error', 'Could not save medication.');
-      console.error(e);
+      // Removed for production.error(e);
     } finally {
       setIsSaving(false);
     }

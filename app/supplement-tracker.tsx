@@ -1,12 +1,12 @@
 import AdherenceChart from '@/components/AdherenceChart';
 import { getThemeTokens } from '@/constants/theme';
-import { getSupplementById, getDoseSchedulesByParent } from '@/services/db';
-import { getTrackingStats, getHistoryAggregates } from '@/services/tracking';
+import { useThemePreference } from '@/hooks/use-theme-preference';
+import { getDoseSchedulesByParent, getSupplementById } from '@/services/db';
+import { getHistoryAggregates, getTrackingStats } from '@/services/tracking';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useThemePreference } from '@/hooks/use-theme-preference';
 
 export default function SupplementTrackerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -53,7 +53,7 @@ export default function SupplementTrackerScreen() {
         setHistory(historyData);
       }
     } catch (error) {
-      console.error('Error loading supplement data:', error);
+      // Removed for production.error('Error loading supplement data:', error);
     } finally {
       setIsLoading(false);
     }

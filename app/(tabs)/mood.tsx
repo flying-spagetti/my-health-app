@@ -12,12 +12,12 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -25,12 +25,12 @@ import { MoodCalendar } from '@/components/mood/MoodCalendar';
 import { MoodTrends } from '@/components/mood/MoodTrends';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import {
-  borderRadius,
-  getMoodColor,
-  getScreenBackground,
-  getThemeTokens,
-  shadows,
-  spacing,
+    borderRadius,
+    getMoodColor,
+    getScreenBackground,
+    getThemeTokens,
+    shadows,
+    spacing,
 } from '@/constants/theme';
 import { useThemePreference } from '@/hooks/use-theme-preference';
 import { getJournalEntries } from '@/services/db';
@@ -61,7 +61,7 @@ export default function MoodScreen() {
       const data = await getJournalEntries();
       setEntries(data as JournalEntry[]);
     } catch (error) {
-      console.error('Error loading journal entries:', error);
+      // Removed for production.error('Error loading journal entries:', error);
     } finally {
       setIsLoading(false);
       setRefreshing(false);
@@ -129,7 +129,7 @@ export default function MoodScreen() {
           entries={entries}
           onDateSelect={(date) => {
             // Could navigate to specific day's entry
-            console.log('Selected date:', date);
+            // Removed for production.log('Selected date:', date);
           }}
         />
 

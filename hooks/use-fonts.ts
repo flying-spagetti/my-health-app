@@ -8,17 +8,17 @@ import { useEffect, useState } from 'react';
 
 // Import fonts from @expo-google-fonts packages
 import {
-  Caveat_400Regular,
-  Caveat_500Medium,
-  Caveat_600SemiBold,
-  Caveat_700Bold,
+    Caveat_400Regular,
+    Caveat_500Medium,
+    Caveat_600SemiBold,
+    Caveat_700Bold,
 } from '@expo-google-fonts/caveat';
 
 import {
-  Nunito_400Regular,
-  Nunito_500Medium,
-  Nunito_600SemiBold,
-  Nunito_700Bold,
+    Nunito_400Regular,
+    Nunito_500Medium,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
 } from '@expo-google-fonts/nunito';
 
 // Font assets map
@@ -50,7 +50,7 @@ export function useFonts(): { fontsLoaded: boolean; fontError: Error | null } {
         await Font.loadAsync(fontAssets);
         setFontsLoaded(true);
       } catch (error) {
-        console.error('Error loading fonts:', error);
+        // Error loading fonts
         setFontError(error instanceof Error ? error : new Error('Failed to load fonts'));
         // Still set fonts as "loaded" so app continues with fallback fonts
         setFontsLoaded(true);

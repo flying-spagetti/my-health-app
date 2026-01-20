@@ -30,7 +30,7 @@ export default function TrackersScreen() {
           setSupplements(supps);
           setRoutines(medRoutines);
         } catch (error) {
-          console.error('Error loading trackers:', error);
+          // Removed for production.error('Error loading trackers:', error);
         } finally {
           setIsLoading(false);
         }

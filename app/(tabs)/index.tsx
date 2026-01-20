@@ -45,6 +45,7 @@ import {
 import { DueItem, getDueItemsToday } from '@/services/tracking';
 import Feather from '@expo/vector-icons/Feather';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 export default function HomeScreen() {
@@ -130,7 +131,7 @@ export default function HomeScreen() {
       setSteps(todaySteps?.steps || 0);
 
     } catch (error) {
-      console.error('Error loading home data:', error);
+      // Error loading home data
     } finally {
       setRefreshing(false);
     }
@@ -180,7 +181,6 @@ export default function HomeScreen() {
   const handleToggleDone = async (item: DueItem) => {
     try {
       const isDone = item.status === 'done';
-      console.log(isDone ? 'Unmarking item:' : 'Marking item as done:', item);
       
       // Optimistically update UI
       setDueItems(prevItems =>
@@ -201,10 +201,9 @@ export default function HomeScreen() {
           event_date: Date.now(),
           event_type: eventType,
         });
-        console.log('Tracking event deleted');
       } else {
         // Create a tracking event
-        const eventId = await createTrackingEvent({
+        await createTrackingEvent({
           parent_type: item.type,
           parent_id: item.id,
           schedule_id: item.scheduleId,
@@ -212,15 +211,11 @@ export default function HomeScreen() {
           event_date: Date.now(),
           event_time: Date.now(),
         });
-        console.log('Tracking event created:', eventId);
       }
       
       // Reload data to ensure consistency
       await loadData();
     } catch (error) {
-      console.error('Error toggling item:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
-      
       // Show user-friendly error message
       Alert.alert(
         'Error',
@@ -450,14 +445,18 @@ export default function HomeScreen() {
                     handleToggleDone(item);
                   }}
                 >
-                  <Feather name="check" size={16} color="#FFFFFF" />
+                  <Ionicons 
+                    name={item.status === 'done' ? "checkmark-done" : "checkmark"} 
+                    size={20} 
+                    color="#FFFFFF" 
+                  />
                 </TouchableOpacity>
               </TouchableOpacity>
             ))}
           </View>
         ) : (
           <View style={[styles.emptyCard, { backgroundColor: tokens.colors.card }, shadows.low]}>
-            <Feather name="check-circle" size={32} color={tokens.colors.success} />
+            <Ionicons name="checkmark-done" size={32} color={tokens.colors.success} />
             <Text style={[styles.emptyText, { color: tokens.colors.textMuted }]}>
               All caught up for today!
             </Text>

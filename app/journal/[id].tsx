@@ -42,7 +42,7 @@ export default function JournalEntryScreen() {
       const data = await getAilyBlogById(entryId);
       setEntry(data);
     } catch (error) {
-      console.error('Error loading blog entry:', error);
+      // Removed for production.error('Error loading blog entry:', error);
     } finally {
       setIsLoading(false);
     }

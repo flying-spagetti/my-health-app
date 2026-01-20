@@ -212,7 +212,7 @@ function analyzeMigraineData(migraines: any[]): MigraineAnalysis {
           });
         });
       } catch (e) {
-        console.error('Error parsing medications', e);
+        // Error parsing medications
       }
     }
   });
@@ -624,7 +624,6 @@ export default function DoctorVisitSummaryScreen() {
       );
       setMigraines(filtered);
     } catch (error) {
-      console.error('Error loading migraine data:', error);
       Alert.alert('Error', 'Could not load migraine data');
     } finally {
       setLoading(false);

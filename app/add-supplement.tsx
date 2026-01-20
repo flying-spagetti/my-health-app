@@ -108,7 +108,7 @@ export default function AddSupplementScreen() {
       ]);
     } catch (e) {
       Alert.alert('Error', 'Could not save supplement.');
-      console.error(e);
+      // Removed for production.error(e);
     } finally {
       setIsSaving(false);
     }

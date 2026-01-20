@@ -1,25 +1,24 @@
 import { useFocusEffect } from '@react-navigation/native';
+import { Image as ExpoImage } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
-  Alert,
-  Animated,
-  Dimensions,
-  FlatList,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Animated,
+    Dimensions,
+    FlatList,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Image as ExpoImage } from 'expo-image';
-import Feather from '@expo/vector-icons/Feather';
 
 import DateTimePicker from '@/components/DateTimePicker';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -71,7 +70,7 @@ export default function JournalScreen() {
       const data = await getAilyBlogs();
       setBlogs(data);
     } catch (error) {
-      console.error('Error loading blogs:', error);
+      // Removed for production.error('Error loading blogs:', error);
     } finally {
       setIsLoading(false);
     }
@@ -146,7 +145,7 @@ export default function JournalScreen() {
       // Reload blogs
       loadBlogs();
     } catch (error) {
-      console.error('Error saving blog entry:', error);
+      // Removed for production.error('Error saving blog entry:', error);
       Alert.alert('Error', 'Failed to save. Please try again.');
     } finally {
       setIsSaving(false);
@@ -164,7 +163,7 @@ export default function JournalScreen() {
             await deleteAilyBlog(id);
             loadBlogs();
           } catch (error) {
-            console.error('Error deleting blog:', error);
+            // Removed for production.error('Error deleting blog:', error);
           }
         },
       },

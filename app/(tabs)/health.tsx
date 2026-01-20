@@ -13,30 +13,30 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import {
-  borderRadius,
-  getScreenBackground,
-  getThemeTokens,
-  shadows,
-  spacing,
+    borderRadius,
+    getScreenBackground,
+    getThemeTokens,
+    shadows,
+    spacing,
 } from '@/constants/theme';
 import { useThemePreference } from '@/hooks/use-theme-preference';
 import {
-  getAppointments,
-  getLatestBP,
-  getMedications,
-  getMigraineReadings,
-  getSupplements,
+    getAppointments,
+    getLatestBP,
+    getMedications,
+    getMigraineReadings,
+    getSupplements,
 } from '@/services/db';
 
 export default function HealthScreen() {
@@ -73,7 +73,7 @@ export default function HealthScreen() {
       
       setUpcomingAppointments(appointmentsData.length);
     } catch (error) {
-      console.error('Error loading health data:', error);
+      // Removed for production.error('Error loading health data:', error);
     } finally {
       setIsLoading(false);
       setRefreshing(false);

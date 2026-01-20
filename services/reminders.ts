@@ -1,8 +1,8 @@
 // services/reminders.ts
-import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
+import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
-import { getMedications, getSupplements, getAppointments, getDoseSchedulesByParent, getMeditationRoutines } from './db';
+import { getAppointments, getDoseSchedulesByParent, getMedications, getMeditationRoutines, getSupplements } from './db';
 
 // Check if we're in Expo Go (where notifications have limitations)
 const isExpoGo = Constants.executionEnvironment === 'storeClient';
@@ -19,7 +19,7 @@ try {
   });
 } catch (error) {
   // Silently handle if notifications aren't available (e.g., in Expo Go)
-  console.warn('Could not set notification handler:', error);
+  // Could not set notification handler
 }
 
 // Set up Android notification channels (required for Android 8.0+)
@@ -59,9 +59,9 @@ async function setupAndroidChannels() {
         description: 'Reminders for your meditation practice',
       });
 
-      console.log('Android notification channels set up successfully');
+      // Android notification channels set up successfully
     } catch (error) {
-      console.error('Error setting up Android notification channels:', error);
+      // Error setting up Android notification channels
     }
   }
 }
@@ -75,7 +75,7 @@ const SCHEDULE_DEBOUNCE_MS = 5000; // Don't reschedule more than once every 5 se
 export async function requestNotificationPermissions(): Promise<boolean> {
   // In Expo Go, local notifications should still work, but we'll handle gracefully
   if (isExpoGo) {
-    console.log('Running in Expo Go - notifications may have limitations');
+    // Running in Expo Go - notifications may have limitations
   }
   
   try {
@@ -106,7 +106,7 @@ export async function requestNotificationPermissions(): Promise<boolean> {
     return finalStatus === 'granted';
   } catch (error) {
     // Handle cases where notifications aren't available
-    console.warn('Notification permissions not available (this is normal in Expo Go for remote notifications):', error);
+    // Notification permissions not available (this is normal in Expo Go for remote notifications)
     // Local scheduled notifications should still work in Expo Go
     return false;
   }
@@ -116,10 +116,10 @@ export async function requestNotificationPermissions(): Promise<boolean> {
 export async function cancelAllNotifications() {
   try {
     await Notifications.cancelAllScheduledNotificationsAsync();
-    console.log('All notifications cancelled');
+    // All notifications cancelled
   } catch (error) {
     // Silently handle errors (e.g., when notifications aren't available in Expo Go)
-    console.warn('Could not cancel notifications (may not be available in Expo Go):', error);
+    // Could not cancel notifications (may not be available in Expo Go)
   }
 }
 
@@ -177,7 +177,7 @@ async function scheduleDoseReminders(
         trigger: { type: 'date', date: triggerDate },
       });
     } catch (error) {
-      console.error(`Error scheduling notification ${notificationId}:`, error);
+      // Error scheduling notification
     }
   }
 }
@@ -212,7 +212,7 @@ async function scheduleAppointmentReminders() {
           trigger: { type: 'date', date: reminderDate },
         });
       } catch (error) {
-        console.error(`Error scheduling appointment reminder:`, error);
+        // Error scheduling appointment reminder
       }
     }
     
@@ -238,7 +238,7 @@ async function scheduleAppointmentReminders() {
           trigger: { type: 'date', date: hourReminder },
         });
       } catch (error) {
-        console.error(`Error scheduling hour reminder:`, error);
+        // Error scheduling hour reminder
       }
     }
   }
@@ -284,7 +284,7 @@ async function scheduleMeditationReminders() {
         trigger: { type: 'date', date: reminderDate },
       });
     } catch (error) {
-      console.error(`Error scheduling meditation reminder:`, error);
+      // Error scheduling meditation reminder
     }
   }
 }
@@ -306,10 +306,10 @@ async function cleanupExpiredNotifications() {
     }
     
     if (cleanedCount > 0) {
-      console.log(`Cleaned up ${cleanedCount} expired notifications`);
+      // Cleaned up expired notifications
     }
   } catch (error) {
-    console.error('Error cleaning up expired notifications:', error);
+    // Error cleaning up expired notifications
   }
 }
 
@@ -369,9 +369,9 @@ async function needsRescheduling(): Promise<boolean> {
   } catch (error) {
     // In Expo Go, notifications might not be fully available
     if (isExpoGo) {
-      console.warn('Could not check notification status (Expo Go limitation) - will attempt to reschedule');
+      // Removed for production.warn('Could not check notification status (Expo Go limitation) - will attempt to reschedule');
     } else {
-      console.error('Error checking if rescheduling needed:', error);
+      // Removed for production.error('Error checking if rescheduling needed:', error);
     }
     return true; // Default to rescheduling on error
   }
@@ -381,14 +381,14 @@ async function needsRescheduling(): Promise<boolean> {
 export async function rescheduleAllReminders(force: boolean = false) {
   // Prevent concurrent scheduling
   if (isScheduling) {
-    console.log('Scheduling already in progress, skipping...');
+    // Removed for production.log('Scheduling already in progress, skipping...');
     return;
   }
   
   // Debounce: don't reschedule if called too recently (unless forced)
   const now = Date.now();
   if (!force && now - lastScheduleTime < SCHEDULE_DEBOUNCE_MS) {
-    console.log('Rescheduling debounced, too soon since last schedule');
+    // Removed for production.log('Rescheduling debounced, too soon since last schedule');
     return;
   }
   
@@ -399,10 +399,10 @@ export async function rescheduleAllReminders(force: boolean = false) {
     const hasPermission = await requestNotificationPermissions();
     if (!hasPermission) {
       if (isExpoGo) {
-        console.log('Running in Expo Go - local notifications may still work but permissions may be limited');
+        // Removed for production.log('Running in Expo Go - local notifications may still work but permissions may be limited');
         // Continue anyway - local notifications might still work
       } else {
-        console.log('Notification permissions not granted');
+        // Removed for production.log('Notification permissions not granted');
         return;
       }
     }
@@ -415,7 +415,7 @@ export async function rescheduleAllReminders(force: boolean = false) {
     if (!force) {
       const needsReschedule = await needsRescheduling();
       if (!needsReschedule) {
-        console.log('Notifications are up to date, skipping reschedule');
+        // Removed for production.log('Notifications are up to date, skipping reschedule');
         isScheduling = false;
         return;
       }
@@ -446,7 +446,7 @@ export async function rescheduleAllReminders(force: boolean = false) {
             schedule.dosage || med.dosage
           );
         } catch (error) {
-          console.error(`Error scheduling medication ${med.id}:`, error);
+          // Removed for production.error(`Error scheduling medication ${med.id}:`, error);
         }
       }
     }
@@ -468,7 +468,7 @@ export async function rescheduleAllReminders(force: boolean = false) {
             schedule.dosage || supp.dosage
           );
         } catch (error) {
-          console.error(`Error scheduling supplement ${supp.id}:`, error);
+          // Removed for production.error(`Error scheduling supplement ${supp.id}:`, error);
         }
       }
     }
@@ -481,15 +481,15 @@ export async function rescheduleAllReminders(force: boolean = false) {
     
     // Get count of scheduled notifications
     const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-    console.log(`Successfully scheduled ${scheduled.length} notifications`);
+    // Removed for production.log(`Successfully scheduled ${scheduled.length} notifications`);
     
     // Log breakdown for debugging
     const medCount = scheduled.filter(n => n.content.data?.type === 'medication' || n.content.data?.type === 'supplement').length;
     const aptCount = scheduled.filter(n => n.content.data?.type === 'appointment').length;
     const meditCount = scheduled.filter(n => n.content.data?.type === 'meditation').length;
-    console.log(`Breakdown: ${medCount} meds/supplements, ${aptCount} appointments, ${meditCount} meditation`);
+    // Removed for production.log(`Breakdown: ${medCount} meds/supplements, ${aptCount} appointments, ${meditCount} meditation`);
   } catch (error) {
-    console.error('Error scheduling reminders:', error);
+    // Removed for production.error('Error scheduling reminders:', error);
   } finally {
     isScheduling = false;
   }
@@ -510,7 +510,7 @@ export async function cancelItemReminders(
       }
     }
   } catch (error) {
-    console.error('Error cancelling item reminders:', error);
+    // Removed for production.error('Error cancelling item reminders:', error);
   }
 }
 
@@ -519,7 +519,7 @@ export async function setBadgeCount(count: number) {
   try {
     await Notifications.setBadgeCountAsync(count);
   } catch (error) {
-    console.error('Error setting badge count:', error);
+    // Removed for production.error('Error setting badge count:', error);
   }
 }
 
@@ -527,7 +527,7 @@ export async function getBadgeCount(): Promise<number> {
   try {
     return await Notifications.getBadgeCountAsync();
   } catch (error) {
-    console.error('Error getting badge count:', error);
+    // Removed for production.error('Error getting badge count:', error);
     return 0;
   }
 }
@@ -536,7 +536,7 @@ export async function clearBadge() {
   try {
     await Notifications.setBadgeCountAsync(0);
   } catch (error) {
-    console.error('Error clearing badge:', error);
+    // Removed for production.error('Error clearing badge:', error);
   }
 }
 
@@ -545,7 +545,7 @@ export async function incrementBadge() {
     const current = await Notifications.getBadgeCountAsync();
     await Notifications.setBadgeCountAsync(current + 1);
   } catch (error) {
-    console.error('Error incrementing badge:', error);
+    // Removed for production.error('Error incrementing badge:', error);
   }
 }
 
@@ -555,7 +555,7 @@ export async function getScheduledNotificationsCount(): Promise<number> {
     const scheduled = await Notifications.getAllScheduledNotificationsAsync();
     return scheduled.length;
   } catch (error) {
-    console.error('Error getting scheduled notifications:', error);
+    // Removed for production.error('Error getting scheduled notifications:', error);
     return 0;
   }
 }
@@ -566,7 +566,7 @@ export async function getScheduledNotificationsByType(type: string) {
     const allNotifications = await Notifications.getAllScheduledNotificationsAsync();
     return allNotifications.filter(n => n.content.data?.type === type);
   } catch (error) {
-    console.error('Error getting scheduled notifications by type:', error);
+    // Removed for production.error('Error getting scheduled notifications by type:', error);
     return [];
   }
 }

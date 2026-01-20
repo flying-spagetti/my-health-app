@@ -1,6 +1,6 @@
 import BigButton from '@/components/BigButton';
 import DateTimePicker from '@/components/DateTimePicker';
-import { tokens, spacing, borderRadius } from '@/constants/theme';
+import { borderRadius, spacing, tokens } from '@/constants/theme';
 import { createAppointment } from '@/services/db';
 import { rescheduleAllReminders } from '@/services/reminders';
 import { useRouter } from 'expo-router';
@@ -44,7 +44,7 @@ export default function AddAppointmentScreen() {
       ]);
     } catch (error) {
       Alert.alert('Error', 'Failed to save appointment. Please try again.');
-      console.error('Error saving appointment:', error);
+      // Removed for production.error('Error saving appointment:', error);
     } finally {
       setIsLoading(false);
     }

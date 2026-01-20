@@ -7,17 +7,17 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import {
-  Alert,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    Alert,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
 } from 'react-native';
 
 const MOODS = [
@@ -170,7 +170,7 @@ export default function AddJournalScreenV2() {
       Alert.alert('Saved', 'Entry added.', [{ text: 'OK', onPress: () => router.back() }]);
     } catch (e) {
       Alert.alert('Error', 'Failed to save journal entry.');
-      console.error(e);
+      // Removed for production.error(e);
     } finally {
       setIsLoading(false);
     }

@@ -8,29 +8,29 @@
  * - Add meditation button
  */
 
-import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  RefreshControl,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
 
-import { useThemePreference } from '@/hooks/use-theme-preference';
-import { 
-  getThemeTokens, 
-  getScreenBackground,
-  spacing,
-  borderRadius,
-  shadows,
-} from '@/constants/theme';
-import { getMeditationRoutines, getMeditationLogs } from '@/services/db';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import {
+    borderRadius,
+    getScreenBackground,
+    getThemeTokens,
+    shadows,
+    spacing,
+} from '@/constants/theme';
+import { useThemePreference } from '@/hooks/use-theme-preference';
+import { getMeditationLogs, getMeditationRoutines } from '@/services/db';
 
 type MeditationRoutine = {
   id: string;
@@ -77,7 +77,7 @@ export default function WellnessScreen() {
       setRoutines(routinesData);
       setSessions(sessionsData);
     } catch (error) {
-      console.error('Error loading wellness data:', error);
+      // Removed for production.error('Error loading wellness data:', error);
     } finally {
       setIsLoading(false);
       setRefreshing(false);

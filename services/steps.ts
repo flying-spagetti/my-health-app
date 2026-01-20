@@ -16,7 +16,7 @@ export async function getTodayStepCount(): Promise<number> {
     return result.steps;
   } catch (e) {
     // Android currently does not support getStepCountAsync for a date range.
-    console.warn('Step count not available on this platform yet, defaulting to 0.', e);
+    // Removed for production.warn('Step count not available on this platform yet, defaulting to 0.', e);
     return 0;
   }
 }

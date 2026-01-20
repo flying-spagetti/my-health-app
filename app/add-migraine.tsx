@@ -7,8 +7,8 @@ import {
   updateMigraineReading,
 } from '@/services/db';
 import Slider from '@react-native-community/slider';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import React, { useState, useEffect } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -16,11 +16,11 @@ import {
   SafeAreaView,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  Switch,
 } from 'react-native';
 
 /* ======================================================
@@ -439,7 +439,7 @@ export default function AddMigraineScreen() {
       }
     } catch (e) {
       Alert.alert('Error', 'Could not load episode.');
-      console.error(e);
+      // Error
     } finally {
       setLoading(false);
     }
@@ -537,7 +537,7 @@ export default function AddMigraineScreen() {
       );
     } catch (e) {
       Alert.alert('Error', 'Could not save episode.');
-      console.error(e);
+      // Error
     } finally {
       setSaving(false);
     }
@@ -655,7 +655,7 @@ export default function AddMigraineScreen() {
       }
     } catch (e) {
       Alert.alert('Error', 'Could not save episode.');
-      console.error(e);
+      // Error
     } finally {
       setSaving(false);
     }

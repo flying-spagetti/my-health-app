@@ -1,11 +1,11 @@
 import { getThemeTokens } from '@/constants/theme';
-import { getMeditationRoutineById, getMeditationLogs } from '@/services/db';
-import { getTrackingStats, getMeditationMinutesHistory } from '@/services/tracking';
+import { useThemePreference } from '@/hooks/use-theme-preference';
+import { getMeditationLogs, getMeditationRoutineById } from '@/services/db';
+import { getMeditationMinutesHistory, getTrackingStats } from '@/services/tracking';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useThemePreference } from '@/hooks/use-theme-preference';
 
 export default function MeditationTrackerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -45,7 +45,7 @@ export default function MeditationTrackerScreen() {
       setStats(statsData);
       setHistory(historyData);
     } catch (error) {
-      console.error('Error loading meditation data:', error);
+      // Removed for production.error('Error loading meditation data:', error);
     } finally {
       setIsLoading(false);
     }

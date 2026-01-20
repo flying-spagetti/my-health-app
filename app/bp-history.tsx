@@ -1,4 +1,4 @@
-import { tokens, spacing, borderRadius, shadows } from '@/constants/theme';
+import { borderRadius, shadows, spacing, tokens } from '@/constants/theme';
 import { getBPReadings } from '@/services/db';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -23,7 +23,7 @@ export default function BPHistoryScreen() {
         const data = await getBPReadings();
         setReadings(data as BPReading[]);
       } catch (error) {
-        console.error('Error loading BP readings:', error);
+        // Removed for production.error('Error loading BP readings:', error);
       } finally {
         setIsLoading(false);
       }

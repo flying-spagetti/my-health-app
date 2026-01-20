@@ -37,10 +37,10 @@ function RootLayoutInner() {
         // Check and reschedule reminders if needed (don't force - only reschedule if missing)
         // This prevents bombarding notifications on app startup
         setTimeout(() => {
-          rescheduleAllReminders(false).catch(console.error);
+          rescheduleAllReminders(false).catch(() => {});
         }, 2000);
       } catch (e) {
-        console.warn('Error during app initialization:', e);
+        // Error during app initialization
       } finally {
         setAppIsReady(true);
       }
@@ -53,18 +53,16 @@ function RootLayoutInner() {
   useEffect(() => {
     // This listener is fired whenever a notification is received while the app is foregrounded
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-      console.log('Notification received:', notification);
       // Increment badge count when notification is received while app is in foreground
-      incrementBadge().catch(console.error);
+      incrementBadge().catch(() => {});
     });
 
     // This listener is fired whenever a user taps on or interacts with a notification
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log('Notification response:', response);
       const data = response.notification.request.content.data;
       
       // Clear badge when user interacts with notification
-      clearBadge().catch(console.error);
+      clearBadge().catch(() => {});
       
       // Navigate based on notification type
       if (data?.type === 'medication' || data?.type === 'supplement') {
@@ -92,7 +90,7 @@ function RootLayoutInner() {
     const subscription = AppState.addEventListener('change', nextAppState => {
       if (nextAppState === 'active') {
         // Clear badge when app is opened
-        clearBadge().catch(console.error);
+        clearBadge().catch(() => {});
       }
     });
 
@@ -119,7 +117,7 @@ function RootLayoutInner() {
 
   // Log font error but continue with fallback fonts
   if (fontError) {
-    console.warn('Font loading error:', fontError);
+    // Font loading error - using fallback fonts
   }
 
   const tokens = getThemeTokens(colorScheme);

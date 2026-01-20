@@ -147,7 +147,7 @@ export default function ProfileScreen() {
         longestStreak,
       });
     } catch (error) {
-      console.error('Error loading stats:', error);
+      // Error loading stats
     }
   };
 
