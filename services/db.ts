@@ -33,17 +33,95 @@ export function initDb() {
       );
     `);
 
-    // Migraine events
+    // Migraine events (ICHD-3 aligned comprehensive tracking)
     db.execSync(`
       CREATE TABLE IF NOT EXISTS migraine_readings (
         id TEXT PRIMARY KEY,
         user_id TEXT DEFAULT 'local-user',
-        severity INTEGER NOT NULL CHECK (severity >= 1 AND severity <= 10),
-        note TEXT,
+        
+        -- Timing & Status
         started_at INTEGER NOT NULL,
         ended_at INTEGER,
+        is_ongoing INTEGER DEFAULT 1,
+        is_completed INTEGER DEFAULT 0,
+        time_to_peak TEXT,
+        
+        -- Sleep Data (Previous Night)
+        sleep_hours TEXT,
+        sleep_quality TEXT,
+        had_nap INTEGER DEFAULT 0,
+        nap_duration TEXT,
+        
+        -- Hydration (24hrs before)
+        fluid_intake_oz TEXT,
+        was_dehydrated INTEGER DEFAULT 0,
+        
+        -- Pain characteristics (ICHD-3 criteria)
+        severity INTEGER NOT NULL CHECK (severity >= 0 AND severity <= 10),
+        pain_locations TEXT,
+        pain_laterality TEXT,
+        pain_quality TEXT,
+        worsened_by_movement INTEGER,
+        
+        -- Aura
+        aura_present INTEGER,
+        aura_types TEXT,
+        aura_duration TEXT,
+        
+        -- Associated symptoms (ICHD-3 criteria)
+        nausea INTEGER DEFAULT 0,
+        vomiting INTEGER DEFAULT 0,
+        photophobia INTEGER DEFAULT 0,
+        phonophobia INTEGER DEFAULT 0,
+        other_symptoms TEXT,
+        
+        -- Phases
+        prodrome_symptoms TEXT,
+        postdrome_symptoms TEXT,
+        
+        -- Triggers
         triggers TEXT,
+        food_triggers TEXT,
+        menstrual_related INTEGER,
+        weather_related INTEGER,
+        
+        -- Enhanced Medication Tracking
+        took_medication INTEGER,
+        medications TEXT,
+        relief_at_30min TEXT,
+        relief_at_1hr TEXT,
+        relief_at_2hr TEXT,
+        relief_at_4hr TEXT,
+        
+        -- Disability & Function
+        functional_impact TEXT,
+        could_work INTEGER,
+        bed_bound_hours TEXT,
+        
+        -- MIDAS Assessment
+        midas_data TEXT,
+        midas_score INTEGER,
+        midas_grade TEXT,
+        
+        -- Classification
+        migraine_classification TEXT,
+        migraine_type TEXT,
+        meets_ichd3_criteria INTEGER,
+        ichd3_criteria_count INTEGER,
+        headache_days_30 INTEGER,
+        migraine_days_30 INTEGER,
+        
+        -- Notes
+        note TEXT,
+        
+        -- Legacy fields (for backward compatibility)
+        pain_location TEXT,
         symptoms TEXT,
+        medication_details TEXT,
+        medication_timing TEXT,
+        relief_achieved TEXT,
+        disability_level TEXT,
+        
         created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
       );
     `);
@@ -406,6 +484,102 @@ export function initDb() {
       console.log('Migration for journals table:', error);
     }
 
+    try {
+      // Migrate migraine_readings table to add all enhanced tracking fields
+      const tables = db.getAllSync(`SELECT name FROM sqlite_master WHERE type='table' AND name='migraine_readings'`);
+      if (tables.length > 0) {
+        const migraineColumns = db.getAllSync(`PRAGMA table_info(migraine_readings)`);
+        const columnNames = migraineColumns.map((col: any) => col.name);
+        
+        const newColumns = [
+          // Status & Timing
+          { name: 'is_ongoing', type: 'INTEGER DEFAULT 1' },
+          { name: 'is_completed', type: 'INTEGER DEFAULT 0' },
+          { name: 'time_to_peak', type: 'TEXT' },
+          
+          // Sleep Data
+          { name: 'sleep_hours', type: 'TEXT' },
+          { name: 'sleep_quality', type: 'TEXT' },
+          { name: 'had_nap', type: 'INTEGER DEFAULT 0' },
+          { name: 'nap_duration', type: 'TEXT' },
+          
+          // Hydration
+          { name: 'fluid_intake_oz', type: 'TEXT' },
+          { name: 'was_dehydrated', type: 'INTEGER DEFAULT 0' },
+          
+          // Pain characteristics (original fields)
+          { name: 'pain_location', type: 'TEXT' },
+          { name: 'pain_locations', type: 'TEXT' },
+          { name: 'pain_laterality', type: 'TEXT' },
+          { name: 'pain_quality', type: 'TEXT' },
+          { name: 'worsened_by_movement', type: 'INTEGER' },
+          
+          // Aura
+          { name: 'aura_present', type: 'INTEGER' },
+          { name: 'aura_types', type: 'TEXT' },
+          { name: 'aura_duration', type: 'TEXT' },
+          
+          // Associated symptoms
+          { name: 'nausea', type: 'INTEGER DEFAULT 0' },
+          { name: 'vomiting', type: 'INTEGER DEFAULT 0' },
+          { name: 'photophobia', type: 'INTEGER DEFAULT 0' },
+          { name: 'phonophobia', type: 'INTEGER DEFAULT 0' },
+          { name: 'other_symptoms', type: 'TEXT' },
+          
+          // Phases
+          { name: 'prodrome_symptoms', type: 'TEXT' },
+          { name: 'postdrome_symptoms', type: 'TEXT' },
+          
+          // Triggers
+          { name: 'food_triggers', type: 'TEXT' },
+          { name: 'menstrual_related', type: 'INTEGER' },
+          { name: 'weather_related', type: 'INTEGER' },
+          
+          // Medication (legacy and new)
+          { name: 'took_medication', type: 'INTEGER' },
+          { name: 'medication_details', type: 'TEXT' },
+          { name: 'medication_timing', type: 'TEXT' },
+          { name: 'medications', type: 'TEXT' },
+          { name: 'relief_achieved', type: 'TEXT' },
+          { name: 'relief_at_30min', type: 'TEXT' },
+          { name: 'relief_at_1hr', type: 'TEXT' },
+          { name: 'relief_at_2hr', type: 'TEXT' },
+          { name: 'relief_at_4hr', type: 'TEXT' },
+          
+          // Disability & Function
+          { name: 'disability_level', type: 'TEXT' },
+          { name: 'functional_impact', type: 'TEXT' },
+          { name: 'could_work', type: 'INTEGER' },
+          { name: 'bed_bound_hours', type: 'TEXT' },
+          
+          // MIDAS
+          { name: 'midas_data', type: 'TEXT' },
+          { name: 'midas_score', type: 'INTEGER' },
+          { name: 'midas_grade', type: 'TEXT' },
+          
+          // Classification
+          { name: 'migraine_classification', type: 'TEXT' },
+          { name: 'migraine_type', type: 'TEXT' },
+          { name: 'meets_ichd3_criteria', type: 'INTEGER' },
+          { name: 'ichd3_criteria_count', type: 'INTEGER' },
+          { name: 'headache_days_30', type: 'INTEGER' },
+          { name: 'migraine_days_30', type: 'INTEGER' },
+        ];
+        
+        for (const col of newColumns) {
+          if (!columnNames.includes(col.name)) {
+            try {
+              db.execSync(`ALTER TABLE migraine_readings ADD COLUMN ${col.name} ${col.type};`);
+            } catch (err) {
+              console.log(`Error adding migraine column ${col.name}:`, err);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.log('Migration for migraine_readings table:', error);
+    }
+
     // Create indexes for better performance
     db.execSync(`CREATE INDEX IF NOT EXISTS idx_bp_readings_measured_at ON bp_readings(measured_at);`);
     db.execSync(`CREATE INDEX IF NOT EXISTS idx_migraine_started_at ON migraine_readings(started_at);`);
@@ -595,17 +769,273 @@ export function saveMigraineReading(reading: any): Promise<void> {
       const userId = reading.user_id || 'local-user';
       
       db.runSync(
-        `INSERT INTO migraine_readings (id, user_id, severity, note, started_at, ended_at, triggers, symptoms)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO migraine_readings (
+          id, user_id, started_at, ended_at, is_ongoing, is_completed, time_to_peak,
+          sleep_hours, sleep_quality, had_nap, nap_duration,
+          fluid_intake_oz, was_dehydrated,
+          severity, pain_locations, pain_laterality, pain_quality, worsened_by_movement,
+          aura_present, aura_types, aura_duration,
+          nausea, vomiting, photophobia, phonophobia, other_symptoms,
+          prodrome_symptoms, postdrome_symptoms,
+          triggers, food_triggers, menstrual_related, weather_related,
+          took_medication, medications, relief_at_30min, relief_at_1hr, relief_at_2hr, relief_at_4hr,
+          functional_impact, could_work, bed_bound_hours,
+          midas_data, midas_score, midas_grade,
+          migraine_classification, migraine_type, meets_ichd3_criteria, ichd3_criteria_count,
+          headache_days_30, migraine_days_30,
+          note,
+          pain_location, symptoms, medication_details, medication_timing, relief_achieved, disability_level
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id,
           userId,
-          reading.severity,
-          reading.note || '',
           reading.started_at || Date.now(),
-          reading.ended_at,
-          reading.triggers || '',
-          reading.symptoms || '',
+          reading.ended_at || null,
+          reading.is_ongoing ? 1 : 0,
+          reading.is_completed ? 1 : 0,
+          reading.time_to_peak || null,
+          
+          // Sleep data
+          reading.sleep_hours || null,
+          reading.sleep_quality || null,
+          reading.had_nap ? 1 : 0,
+          reading.nap_duration || null,
+          
+          // Hydration
+          reading.fluid_intake_oz || null,
+          reading.was_dehydrated ? 1 : 0,
+          
+          // Pain characteristics
+          reading.severity,
+          reading.pain_locations || null,
+          reading.pain_laterality || null,
+          reading.pain_quality || null,
+          reading.worsened_by_movement !== null && reading.worsened_by_movement !== undefined 
+            ? (reading.worsened_by_movement ? 1 : 0) : null,
+          
+          // Aura
+          reading.aura_present !== null && reading.aura_present !== undefined 
+            ? (reading.aura_present ? 1 : 0) : null,
+          reading.aura_types || null,
+          reading.aura_duration || null,
+          
+          // Associated symptoms
+          reading.nausea ? 1 : 0,
+          reading.vomiting ? 1 : 0,
+          reading.photophobia ? 1 : 0,
+          reading.phonophobia ? 1 : 0,
+          reading.other_symptoms || null,
+          
+          // Phases
+          reading.prodrome_symptoms || null,
+          reading.postdrome_symptoms || null,
+          
+          // Triggers
+          reading.triggers || null,
+          reading.food_triggers || null,
+          reading.menstrual_related !== null && reading.menstrual_related !== undefined 
+            ? (reading.menstrual_related ? 1 : 0) : null,
+          reading.weather_related !== null && reading.weather_related !== undefined 
+            ? (reading.weather_related ? 1 : 0) : null,
+          
+          // Medication
+          reading.took_medication !== null && reading.took_medication !== undefined 
+            ? (reading.took_medication ? 1 : 0) : null,
+          reading.medications || null,
+          reading.relief_at_30min || null,
+          reading.relief_at_1hr || null,
+          reading.relief_at_2hr || null,
+          reading.relief_at_4hr || null,
+          
+          // Disability & Function
+          reading.functional_impact || null,
+          reading.could_work !== null && reading.could_work !== undefined 
+            ? (reading.could_work ? 1 : 0) : null,
+          reading.bed_bound_hours || null,
+          
+          // MIDAS
+          reading.midas_data || null,
+          reading.midas_score || null,
+          reading.midas_grade || null,
+          
+          // Classification
+          reading.migraine_classification || null,
+          reading.migraine_type || null,
+          reading.meets_ichd3_criteria !== null && reading.meets_ichd3_criteria !== undefined 
+            ? (reading.meets_ichd3_criteria ? 1 : 0) : null,
+          reading.ichd3_criteria_count || null,
+          reading.headache_days_30 || null,
+          reading.migraine_days_30 || null,
+          
+          // Notes
+          reading.note || null,
+          
+          // Legacy fields (for backward compatibility)
+          reading.pain_location || null,
+          reading.symptoms || null,
+          reading.medication_details || null,
+          reading.medication_timing || null,
+          reading.relief_achieved || null,
+          reading.disability_level || null,
+        ]
+      );
+      resolve();
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function updateMigraineReading(id: string, updates: any): Promise<void> {
+  return new Promise((resolve, reject) => {
+    try {
+      db.runSync(
+        `UPDATE migraine_readings SET
+          started_at = ?,
+          ended_at = ?,
+          is_ongoing = ?,
+          is_completed = ?,
+          time_to_peak = ?,
+          sleep_hours = ?,
+          sleep_quality = ?,
+          had_nap = ?,
+          nap_duration = ?,
+          fluid_intake_oz = ?,
+          was_dehydrated = ?,
+          severity = ?,
+          pain_locations = ?,
+          pain_laterality = ?,
+          pain_quality = ?,
+          worsened_by_movement = ?,
+          aura_present = ?,
+          aura_types = ?,
+          aura_duration = ?,
+          nausea = ?,
+          vomiting = ?,
+          photophobia = ?,
+          phonophobia = ?,
+          other_symptoms = ?,
+          prodrome_symptoms = ?,
+          postdrome_symptoms = ?,
+          triggers = ?,
+          food_triggers = ?,
+          menstrual_related = ?,
+          weather_related = ?,
+          took_medication = ?,
+          medications = ?,
+          relief_at_30min = ?,
+          relief_at_1hr = ?,
+          relief_at_2hr = ?,
+          relief_at_4hr = ?,
+          functional_impact = ?,
+          could_work = ?,
+          bed_bound_hours = ?,
+          midas_data = ?,
+          midas_score = ?,
+          midas_grade = ?,
+          migraine_classification = ?,
+          migraine_type = ?,
+          meets_ichd3_criteria = ?,
+          ichd3_criteria_count = ?,
+          headache_days_30 = ?,
+          migraine_days_30 = ?,
+          note = ?,
+          pain_location = ?,
+          medication_details = ?,
+          medication_timing = ?,
+          relief_achieved = ?,
+          disability_level = ?
+        WHERE id = ?`,
+        [
+          updates.started_at,
+          updates.ended_at || null,
+          updates.is_ongoing ? 1 : 0,
+          updates.is_completed ? 1 : 0,
+          updates.time_to_peak || null,
+          
+          // Sleep data
+          updates.sleep_hours || null,
+          updates.sleep_quality || null,
+          updates.had_nap ? 1 : 0,
+          updates.nap_duration || null,
+          
+          // Hydration
+          updates.fluid_intake_oz || null,
+          updates.was_dehydrated ? 1 : 0,
+          
+          // Pain characteristics
+          updates.severity,
+          updates.pain_locations || null,
+          updates.pain_laterality || null,
+          updates.pain_quality || null,
+          updates.worsened_by_movement !== null && updates.worsened_by_movement !== undefined 
+            ? (updates.worsened_by_movement ? 1 : 0) : null,
+          
+          // Aura
+          updates.aura_present !== null && updates.aura_present !== undefined 
+            ? (updates.aura_present ? 1 : 0) : null,
+          updates.aura_types || null,
+          updates.aura_duration || null,
+          
+          // Associated symptoms
+          updates.nausea ? 1 : 0,
+          updates.vomiting ? 1 : 0,
+          updates.photophobia ? 1 : 0,
+          updates.phonophobia ? 1 : 0,
+          updates.other_symptoms || null,
+          
+          // Phases
+          updates.prodrome_symptoms || null,
+          updates.postdrome_symptoms || null,
+          
+          // Triggers
+          updates.triggers || null,
+          updates.food_triggers || null,
+          updates.menstrual_related !== null && updates.menstrual_related !== undefined 
+            ? (updates.menstrual_related ? 1 : 0) : null,
+          updates.weather_related !== null && updates.weather_related !== undefined 
+            ? (updates.weather_related ? 1 : 0) : null,
+          
+          // Medication
+          updates.took_medication !== null && updates.took_medication !== undefined 
+            ? (updates.took_medication ? 1 : 0) : null,
+          updates.medications || null,
+          updates.relief_at_30min || null,
+          updates.relief_at_1hr || null,
+          updates.relief_at_2hr || null,
+          updates.relief_at_4hr || null,
+          
+          // Disability & Function
+          updates.functional_impact || null,
+          updates.could_work !== null && updates.could_work !== undefined 
+            ? (updates.could_work ? 1 : 0) : null,
+          updates.bed_bound_hours || null,
+          
+          // MIDAS
+          updates.midas_data || null,
+          updates.midas_score || null,
+          updates.midas_grade || null,
+          
+          // Classification
+          updates.migraine_classification || null,
+          updates.migraine_type || null,
+          updates.meets_ichd3_criteria !== null && updates.meets_ichd3_criteria !== undefined 
+            ? (updates.meets_ichd3_criteria ? 1 : 0) : null,
+          updates.ichd3_criteria_count || null,
+          updates.headache_days_30 || null,
+          updates.migraine_days_30 || null,
+          
+          // Notes
+          updates.note || null,
+          
+          // Legacy fields
+          updates.pain_location || null,
+          updates.medication_details || null,
+          updates.medication_timing || null,
+          updates.relief_achieved || null,
+          updates.disability_level || null,
+          
+          id,
         ]
       );
       resolve();
@@ -622,6 +1052,31 @@ export function getMigraineReadings(): Promise<any[]> {
         `SELECT * FROM migraine_readings ORDER BY started_at DESC`
       );
       resolve(result || []);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getMigraineReadingById(id: string): Promise<any | null> {
+  return new Promise((resolve, reject) => {
+    try {
+      const result = db.getFirstSync(
+        `SELECT * FROM migraine_readings WHERE id = ?`,
+        [id]
+      );
+      resolve(result || null);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function deleteMigraineReading(id: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    try {
+      db.runSync(`DELETE FROM migraine_readings WHERE id = ?`, [id]);
+      resolve();
     } catch (error) {
       reject(error);
     }
@@ -1217,7 +1672,7 @@ export function deleteDoseSchedule(id: string): Promise<void> {
 }
 
 // ========== Tracking Event Functions ==========
-export function createTrackingEvent(event: {
+export async function createTrackingEvent(event: {
   parent_type: 'medication' | 'supplement' | 'meditation' | 'appointment';
   parent_id: string;
   schedule_id?: string;
@@ -1226,28 +1681,79 @@ export function createTrackingEvent(event: {
   event_time?: number;
   metadata?: string;
 }): Promise<string> {
-  return new Promise((resolve, reject) => {
-    try {
-      const id = generateId();
-      db.runSync(
-        `INSERT INTO tracking_events (id, parent_type, parent_id, schedule_id, event_type, event_date, event_time, metadata)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          id,
-          event.parent_type,
-          event.parent_id,
-          event.schedule_id || null,
-          event.event_type,
-          event.event_date,
-          event.event_time || null,
-          event.metadata ? JSON.stringify(event.metadata) : null,
-        ]
-      );
-      resolve(id);
-    } catch (error) {
-      reject(error);
+  try {
+    const id = generateId();
+    console.log('Creating tracking event:', {
+      id,
+      parent_type: event.parent_type,
+      parent_id: event.parent_id,
+      schedule_id: event.schedule_id,
+      event_type: event.event_type,
+    });
+    
+    db.runSync(
+      `INSERT INTO tracking_events (id, parent_type, parent_id, schedule_id, event_type, event_date, event_time, metadata)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        event.parent_type,
+        event.parent_id,
+        event.schedule_id || null,
+        event.event_type,
+        event.event_date,
+        event.event_time || null,
+        event.metadata ? JSON.stringify(event.metadata) : null,
+      ]
+    );
+    
+    console.log('Tracking event created successfully:', id);
+    return id;
+  } catch (error) {
+    console.error('Error creating tracking event:', error);
+    throw error;
+  }
+}
+
+export async function deleteTrackingEvent(params: {
+  parent_id: string;
+  schedule_id?: string;
+  event_date: number;
+  event_type?: 'taken' | 'done' | 'skipped' | 'missed';
+}): Promise<void> {
+  try {
+    const startOfDay = new Date(params.event_date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(params.event_date);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    console.log('Deleting tracking event:', {
+      parent_id: params.parent_id,
+      schedule_id: params.schedule_id,
+      event_type: params.event_type,
+    });
+    
+    let query = `DELETE FROM tracking_events 
+                 WHERE parent_id = ? 
+                 AND event_date >= ? 
+                 AND event_date <= ?`;
+    const queryParams: any[] = [params.parent_id, startOfDay.getTime(), endOfDay.getTime()];
+    
+    if (params.schedule_id) {
+      query += ` AND schedule_id = ?`;
+      queryParams.push(params.schedule_id);
     }
-  });
+    
+    if (params.event_type) {
+      query += ` AND event_type = ?`;
+      queryParams.push(params.event_type);
+    }
+    
+    db.runSync(query, queryParams);
+    console.log('Tracking event deleted successfully');
+  } catch (error) {
+    console.error('Error deleting tracking event:', error);
+    throw error;
+  }
 }
 
 export function getTrackingEventsByParent(

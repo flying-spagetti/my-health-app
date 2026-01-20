@@ -15,6 +15,7 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
+  Alert,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -24,7 +25,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import {
   borderRadius,
   getMoodColor,
@@ -36,14 +36,15 @@ import {
 import { useThemePreference } from '@/hooks/use-theme-preference';
 import {
   createTrackingEvent,
+  deleteTrackingEvent,
   getJournalEntries,
   getMigraineReadings,
   getSteps,
   getWorkouts
 } from '@/services/db';
 import { DueItem, getDueItemsToday } from '@/services/tracking';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Feather from '@expo/vector-icons/Feather';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 export default function HomeScreen() {
@@ -176,33 +177,59 @@ export default function HomeScreen() {
     return days;
   };
 
-  const handleMarkDone = async (item: DueItem) => {
+  const handleToggleDone = async (item: DueItem) => {
     try {
+      const isDone = item.status === 'done';
+      console.log(isDone ? 'Unmarking item:' : 'Marking item as done:', item);
+      
       // Optimistically update UI
       setDueItems(prevItems =>
         prevItems.map(prevItem =>
           prevItem.id === item.id && prevItem.scheduleId === item.scheduleId
-            ? { ...prevItem, status: 'done' as const }
+            ? { ...prevItem, status: isDone ? 'pending' as const : 'done' as const }
             : prevItem
         )
       );
 
       const eventType = item.type === 'medication' || item.type === 'supplement' ? 'taken' : 'done';
-      await createTrackingEvent({
-        parent_type: item.type,
-        parent_id: item.id,
-        schedule_id: item.scheduleId,
-        event_type: eventType,
-        event_date: Date.now(),
-        event_time: Date.now(),
-      });
+      
+      if (isDone) {
+        // Delete the tracking event
+        await deleteTrackingEvent({
+          parent_id: item.id,
+          schedule_id: item.scheduleId,
+          event_date: Date.now(),
+          event_type: eventType,
+        });
+        console.log('Tracking event deleted');
+      } else {
+        // Create a tracking event
+        const eventId = await createTrackingEvent({
+          parent_type: item.type,
+          parent_id: item.id,
+          schedule_id: item.scheduleId,
+          event_type: eventType,
+          event_date: Date.now(),
+          event_time: Date.now(),
+        });
+        console.log('Tracking event created:', eventId);
+      }
       
       // Reload data to ensure consistency
-      loadData();
+      await loadData();
     } catch (error) {
-      console.error('Error marking item done:', error);
+      console.error('Error toggling item:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      
+      // Show user-friendly error message
+      Alert.alert(
+        'Error',
+        `Could not update ${item.name}. Please try again.`,
+        [{ text: 'OK' }]
+      );
+      
       // Revert optimistic update on error
-      loadData();
+      await loadData();
     }
   };
 
@@ -413,21 +440,18 @@ export default function HomeScreen() {
                     </Text>
                   )}
                 </View>
-                {item.status !== 'done' ? (
-                  <TouchableOpacity
-                    style={[styles.checkButton, { backgroundColor: tokens.colors.primary }]}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      handleMarkDone(item);
-                    }}
-                  >
-                    <Feather name="check" size={16} color="#FFFFFF" />
-                  </TouchableOpacity>
-                ) : (
-                  <View style={[styles.checkButton, { backgroundColor: tokens.colors.success }]}>
-                    <Feather name="check" size={16} color="#FFFFFF" />
-                  </View>
-                )}
+                <TouchableOpacity
+                  style={[
+                    styles.checkButton,
+                    { backgroundColor: item.status === 'done' ? tokens.colors.success : tokens.colors.primary }
+                  ]}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    handleToggleDone(item);
+                  }}
+                >
+                  <Feather name="check" size={16} color="#FFFFFF" />
+                </TouchableOpacity>
               </TouchableOpacity>
             ))}
           </View>
