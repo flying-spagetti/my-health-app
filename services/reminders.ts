@@ -369,9 +369,9 @@ async function needsRescheduling(): Promise<boolean> {
   } catch (error) {
     // In Expo Go, notifications might not be fully available
     if (isExpoGo) {
-      // Removed for production.warn('Could not check notification status (Expo Go limitation) - will attempt to reschedule');
+      // Could not check notification status (Expo Go limitation) - will attempt to reschedule
     } else {
-      // Removed for production.error('Error checking if rescheduling needed:', error);
+      // Error checking if rescheduling needed
     }
     return true; // Default to rescheduling on error
   }
@@ -381,14 +381,14 @@ async function needsRescheduling(): Promise<boolean> {
 export async function rescheduleAllReminders(force: boolean = false) {
   // Prevent concurrent scheduling
   if (isScheduling) {
-    // Removed for production.log('Scheduling already in progress, skipping...');
+    // Scheduling already in progress, skipping...
     return;
   }
   
   // Debounce: don't reschedule if called too recently (unless forced)
   const now = Date.now();
   if (!force && now - lastScheduleTime < SCHEDULE_DEBOUNCE_MS) {
-    // Removed for production.log('Rescheduling debounced, too soon since last schedule');
+    // Rescheduling debounced, too soon since last schedule
     return;
   }
   
@@ -399,10 +399,10 @@ export async function rescheduleAllReminders(force: boolean = false) {
     const hasPermission = await requestNotificationPermissions();
     if (!hasPermission) {
       if (isExpoGo) {
-        // Removed for production.log('Running in Expo Go - local notifications may still work but permissions may be limited');
+        // Running in Expo Go - local notifications may still work but permissions may be limited
         // Continue anyway - local notifications might still work
       } else {
-        // Removed for production.log('Notification permissions not granted');
+        // Notification permissions not granted
         return;
       }
     }
