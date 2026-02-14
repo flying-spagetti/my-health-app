@@ -376,6 +376,273 @@ export function initDb() {
       );
     `);
 
+    // ========== Transformation Tracker Tables ==========
+
+    // Transformation profiles (user demographics, health metrics)
+    db.execSync(`
+      CREATE TABLE IF NOT EXISTS transformation_profiles (
+        id TEXT PRIMARY KEY,
+        user_id TEXT DEFAULT 'local-user',
+        age INTEGER,
+        sex TEXT,
+        height_cm REAL,
+        weight_kg REAL,
+        body_fat_pct REAL,
+        diet TEXT,
+        training_frequency TEXT,
+        sleep_hours TEXT,
+        smoking INTEGER DEFAULT 0,
+        alcohol INTEGER DEFAULT 0,
+        medical_issues TEXT,
+        hairfall_years INTEGER,
+        hair_thinning_location TEXT,
+        family_history_father INTEGER DEFAULT 0,
+        family_history_maternal_grandfather INTEGER DEFAULT 0,
+        skin_type TEXT,
+        skin_concerns TEXT,
+        goal_seriousness INTEGER,
+        emotional_context TEXT,
+        onboarding_complete INTEGER DEFAULT 0,
+        created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
+        updated_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
+      );
+    `);
+
+    // Transformation goals (targets, macros, timeline)
+    db.execSync(`
+      CREATE TABLE IF NOT EXISTS transformation_goals (
+        id TEXT PRIMARY KEY,
+        user_id TEXT DEFAULT 'local-user',
+        profile_id TEXT,
+        target_weight_min REAL,
+        target_weight_max REAL,
+        target_body_fat_min REAL,
+        target_body_fat_max REAL,
+        timeline_months INTEGER,
+        calories_min INTEGER,
+        calories_max INTEGER,
+        protein_min INTEGER,
+        protein_max INTEGER,
+        fat_min INTEGER,
+        fat_max INTEGER,
+        carbs_min INTEGER,
+        carbs_max INTEGER,
+        steps_goal INTEGER,
+        incline_walk_min INTEGER,
+        created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
+        FOREIGN KEY (profile_id) REFERENCES transformation_profiles (id)
+      );
+    `);
+
+    // Transformation routines (skincare AM/PM, hair, beard - JSON structure)
+    db.execSync(`
+      CREATE TABLE IF NOT EXISTS transformation_routines (
+        id TEXT PRIMARY KEY,
+        user_id TEXT DEFAULT 'local-user',
+        profile_id TEXT,
+        skin_am_items TEXT,
+        skin_pm_items TEXT,
+        hair_items TEXT,
+        beard_items TEXT,
+        supplement_schedule TEXT,
+        retinol_schedule TEXT,
+        ketoconazole_schedule TEXT,
+        created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
+        updated_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
+        FOREIGN KEY (profile_id) REFERENCES transformation_profiles (id)
+      );
+    `);
+
+    // Meal plans (7-day rotating template)
+    db.execSync(`
+      CREATE TABLE IF NOT EXISTS meal_plans (
+        id TEXT PRIMARY KEY,
+        user_id TEXT DEFAULT 'local-user',
+        profile_id TEXT,
+        plan_name TEXT,
+        day_1_meals TEXT,
+        day_2_meals TEXT,
+        day_3_meals TEXT,
+        day_4_meals TEXT,
+        day_5_meals TEXT,
+        day_6_meals TEXT,
+        day_7_meals TEXT,
+        is_active INTEGER DEFAULT 1,
+        created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
+        updated_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
+        FOREIGN KEY (profile_id) REFERENCES transformation_profiles (id)
+      );
+    `);
+
+    // Meal plan adherence (daily tracking with swaps)
+    db.execSync(`
+      CREATE TABLE IF NOT EXISTS meal_plan_adherence (
+        id TEXT PRIMARY KEY,
+        user_id TEXT DEFAULT 'local-user',
+        meal_plan_id TEXT,
+        adherence_date INTEGER NOT NULL,
+        day_of_week INTEGER,
+        breakfast_completed INTEGER DEFAULT 0,
+        lunch_completed INTEGER DEFAULT 0,
+        post_workout_completed INTEGER DEFAULT 0,
+        dinner_completed INTEGER DEFAULT 0,
+        swaps TEXT,
+        notes TEXT,
+        created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
+        FOREIGN KEY (meal_plan_id) REFERENCES meal_plans (id)
+      );
+    `);
+
+    // Workout plans (5-day split template)
+    db.execSync(`
+      CREATE TABLE IF NOT EXISTS workout_plans (
+        id TEXT PRIMARY KEY,
+        user_id TEXT DEFAULT 'local-user',
+        profile_id TEXT,
+        plan_name TEXT,
+        day_1_exercises TEXT,
+        day_2_exercises TEXT,
+        day_3_exercises TEXT,
+        day_4_exercises TEXT,
+        day_5_exercises TEXT,
+        is_active INTEGER DEFAULT 1,
+        created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
+        updated_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
+        FOREIGN KEY (profile_id) REFERENCES transformation_profiles (id)
+      );
+    `);
+
+    // Workout logs (enhanced: sets, reps, weights)
+    db.execSync(`
+      CREATE TABLE IF NOT EXISTS workout_logs (
+        id TEXT PRIMARY KEY,
+        user_id TEXT DEFAULT 'local-user',
+        workout_plan_id TEXT,
+        workout_type TEXT NOT NULL,
+        day_number INTEGER,
+        exercises_data TEXT,
+        duration INTEGER NOT NULL,
+        incline_walk_minutes INTEGER,
+        intensity TEXT,
+        calories_burned INTEGER,
+        note TEXT,
+        started_at INTEGER NOT NULL,
+        ended_at INTEGER,
+        created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
+        FOREIGN KEY (workout_plan_id) REFERENCES workout_plans (id)
+      );
+    `);
+
+    // Weekly check-ins (weigh-in, measurements, adherence)
+    db.execSync(`
+      CREATE TABLE IF NOT EXISTS weekly_checkins (
+        id TEXT PRIMARY KEY,
+        user_id TEXT DEFAULT 'local-user',
+        checkin_date INTEGER NOT NULL,
+        weight_kg REAL,
+        waist_cm REAL,
+        body_fat_pct REAL,
+        strength_prs TEXT,
+        adherence_pct INTEGER,
+        notes TEXT,
+        created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
+        FOREIGN KEY (user_id) REFERENCES transformation_profiles (user_id)
+      );
+    `);
+
+    // Progress photos metadata (monthly checkpoints)
+    db.execSync(`
+      CREATE TABLE IF NOT EXISTS progress_photos_meta (
+        id TEXT PRIMARY KEY,
+        user_id TEXT DEFAULT 'local-user',
+        photo_date INTEGER NOT NULL,
+        lighting_notes TEXT,
+        angles TEXT,
+        notes TEXT,
+        created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
+      );
+    `);
+
+    // Hairline checks (4-6 week interval enforcement)
+    db.execSync(`
+      CREATE TABLE IF NOT EXISTS hairline_checks (
+        id TEXT PRIMARY KEY,
+        user_id TEXT DEFAULT 'local-user',
+        check_date INTEGER NOT NULL,
+        notes TEXT,
+        created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
+      );
+    `);
+
+    // Transformation reminders (sunscreen, retinol, ketoconazole, etc.)
+    db.execSync(`
+      CREATE TABLE IF NOT EXISTS transformation_reminders (
+        id TEXT PRIMARY KEY,
+        user_id TEXT DEFAULT 'local-user',
+        reminder_type TEXT NOT NULL,
+        time_of_day TEXT,
+        days_of_week TEXT,
+        frequency TEXT,
+        is_enabled INTEGER DEFAULT 1,
+        created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
+        updated_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
+      );
+    `);
+
+    // Routine checklists (daily checklist completion)
+    db.execSync(`
+      CREATE TABLE IF NOT EXISTS routine_checklists (
+        id TEXT PRIMARY KEY,
+        user_id TEXT DEFAULT 'local-user',
+        checklist_date INTEGER NOT NULL,
+        skin_am_done INTEGER DEFAULT 0,
+        skin_pm_done INTEGER DEFAULT 0,
+        sunscreen_done INTEGER DEFAULT 0,
+        retinol_done INTEGER DEFAULT 0,
+        hair_wash_done INTEGER DEFAULT 0,
+        conditioner_done INTEGER DEFAULT 0,
+        beard_oil_done INTEGER DEFAULT 0,
+        supplements_morning_done INTEGER DEFAULT 0,
+        supplements_postworkout_done INTEGER DEFAULT 0,
+        supplements_night_done INTEGER DEFAULT 0,
+        steps_done INTEGER DEFAULT 0,
+        steps_count INTEGER,
+        workout_done INTEGER DEFAULT 0,
+        ketoconazole_done INTEGER DEFAULT 0,
+        microneedling_done INTEGER DEFAULT 0,
+        created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
+        updated_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
+      );
+    `);
+
+    // Transformation Tracker indexes
+    db.execSync(`CREATE INDEX IF NOT EXISTS idx_weekly_checkins_date ON weekly_checkins(checkin_date);`);
+
+    // Migration: workout_logs - add split_tag, progressive_overload, is_leg_day
+    try {
+      const wlCols = db.getAllSync(`PRAGMA table_info(workout_logs)`);
+      const wlNames = (wlCols as any[]).map((c) => c.name);
+      if (!wlNames.includes('split_tag')) {
+        db.execSync(`ALTER TABLE workout_logs ADD COLUMN split_tag TEXT;`);
+        db.execSync(`ALTER TABLE workout_logs ADD COLUMN progressive_overload INTEGER DEFAULT 0;`);
+        db.execSync(`ALTER TABLE workout_logs ADD COLUMN is_leg_day INTEGER DEFAULT 0;`);
+      }
+    } catch (_) {}
+
+    // Migration: meal_plan_adherence - add protein_grams for protein compliance
+    try {
+      const mpaCols = db.getAllSync(`PRAGMA table_info(meal_plan_adherence)`);
+      const mpaNames = (mpaCols as any[]).map((c) => c.name);
+      if (!mpaNames.includes('protein_grams')) {
+        db.execSync(`ALTER TABLE meal_plan_adherence ADD COLUMN protein_grams INTEGER;`);
+      }
+    } catch (_) {}
+    db.execSync(`CREATE INDEX IF NOT EXISTS idx_progress_photos_date ON progress_photos_meta(photo_date);`);
+    db.execSync(`CREATE INDEX IF NOT EXISTS idx_hairline_checks_date ON hairline_checks(check_date);`);
+    db.execSync(`CREATE INDEX IF NOT EXISTS idx_meal_plan_adherence_date ON meal_plan_adherence(adherence_date);`);
+    db.execSync(`CREATE INDEX IF NOT EXISTS idx_routine_checklists_date ON routine_checklists(checklist_date);`);
+    db.execSync(`CREATE INDEX IF NOT EXISTS idx_workout_logs_started ON workout_logs(started_at);`);
+
     // Migrate existing tables - add new columns if they don't exist
     try {
       // Check if medications table exists and has start_date column
@@ -2030,4 +2297,759 @@ export function deleteAilyBlog(id: string): Promise<void> {
       reject(error);
     }
   });
+}
+
+// ========== Transformation Tracker Functions ==========
+
+export function createTransformationProfile(profile: Record<string, any>): Promise<string> {
+  return new Promise((resolve, reject) => {
+    try {
+      const id = profile.id || generateId();
+      const now = Date.now();
+      db.runSync(
+        `INSERT INTO transformation_profiles (
+          id, user_id, age, sex, height_cm, weight_kg, body_fat_pct, diet, training_frequency,
+          sleep_hours, smoking, alcohol, medical_issues, hairfall_years, hair_thinning_location,
+          family_history_father, family_history_maternal_grandfather, skin_type, skin_concerns,
+          goal_seriousness, emotional_context, onboarding_complete, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          profile.user_id || 'local-user',
+          profile.age ?? null,
+          profile.sex ?? null,
+          profile.height_cm ?? null,
+          profile.weight_kg ?? null,
+          profile.body_fat_pct ?? null,
+          profile.diet ?? null,
+          profile.training_frequency ?? null,
+          profile.sleep_hours ?? null,
+          profile.smoking ? 1 : 0,
+          profile.alcohol ? 1 : 0,
+          profile.medical_issues ?? null,
+          profile.hairfall_years ?? null,
+          profile.hair_thinning_location ?? null,
+          profile.family_history_father ? 1 : 0,
+          profile.family_history_maternal_grandfather ? 1 : 0,
+          profile.skin_type ?? null,
+          profile.skin_concerns ?? null,
+          profile.goal_seriousness ?? null,
+          profile.emotional_context ?? null,
+          profile.onboarding_complete ? 1 : 0,
+          now,
+          now,
+        ]
+      );
+      resolve(id);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getTransformationProfile(): Promise<any | null> {
+  return new Promise((resolve, reject) => {
+    try {
+      const result = db.getFirstSync(
+        `SELECT * FROM transformation_profiles WHERE user_id = 'local-user' ORDER BY created_at DESC LIMIT 1`
+      );
+      resolve(result || null);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function updateTransformationProfile(id: string, updates: Record<string, any>): Promise<void> {
+  return new Promise((resolve, reject) => {
+    try {
+      const allowed = [
+        'age', 'sex', 'height_cm', 'weight_kg', 'body_fat_pct', 'diet', 'training_frequency',
+        'sleep_hours', 'smoking', 'alcohol', 'medical_issues', 'hairfall_years', 'hair_thinning_location',
+        'family_history_father', 'family_history_maternal_grandfather', 'skin_type', 'skin_concerns',
+        'goal_seriousness', 'emotional_context', 'onboarding_complete'
+      ];
+      const fields: string[] = ['updated_at = ?'];
+      const values: any[] = [Date.now()];
+      Object.entries(updates).forEach(([key, value]) => {
+        if (allowed.includes(key) && value !== undefined) {
+          fields.push(`${key} = ?`);
+          values.push(typeof value === 'boolean' ? (value ? 1 : 0) : value);
+        }
+      });
+      if (fields.length <= 1) {
+        resolve();
+        return;
+      }
+      values.push(id);
+      db.runSync(`UPDATE transformation_profiles SET ${fields.join(', ')} WHERE id = ?`, values);
+      resolve();
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function createTransformationGoals(goals: Record<string, any>): Promise<string> {
+  return new Promise((resolve, reject) => {
+    try {
+      const id = goals.id || generateId();
+      db.runSync(
+        `INSERT INTO transformation_goals (
+          id, user_id, profile_id, target_weight_min, target_weight_max, target_body_fat_min, target_body_fat_max,
+          timeline_months, calories_min, calories_max, protein_min, protein_max, fat_min, fat_max,
+          carbs_min, carbs_max, steps_goal, incline_walk_min, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          goals.user_id || 'local-user',
+          goals.profile_id ?? null,
+          goals.target_weight_min ?? null,
+          goals.target_weight_max ?? null,
+          goals.target_body_fat_min ?? null,
+          goals.target_body_fat_max ?? null,
+          goals.timeline_months ?? null,
+          goals.calories_min ?? null,
+          goals.calories_max ?? null,
+          goals.protein_min ?? null,
+          goals.protein_max ?? null,
+          goals.fat_min ?? null,
+          goals.fat_max ?? null,
+          goals.carbs_min ?? null,
+          goals.carbs_max ?? null,
+          goals.steps_goal ?? null,
+          goals.incline_walk_min ?? null,
+          Date.now(),
+        ]
+      );
+      resolve(id);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getTransformationGoals(profileId?: string): Promise<any | null> {
+  return new Promise((resolve, reject) => {
+    try {
+      let result;
+      if (profileId) {
+        result = db.getFirstSync(`SELECT * FROM transformation_goals WHERE profile_id = ?`, [profileId]);
+      } else {
+        result = db.getFirstSync(`SELECT * FROM transformation_goals WHERE user_id = 'local-user' ORDER BY created_at DESC LIMIT 1`);
+      }
+      resolve(result || null);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function createTransformationRoutines(routines: Record<string, any>): Promise<string> {
+  return new Promise((resolve, reject) => {
+    try {
+      const id = routines.id || generateId();
+      const now = Date.now();
+      db.runSync(
+        `INSERT INTO transformation_routines (
+          id, user_id, profile_id, skin_am_items, skin_pm_items, hair_items, beard_items,
+          supplement_schedule, retinol_schedule, ketoconazole_schedule, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          routines.user_id || 'local-user',
+          routines.profile_id ?? null,
+          typeof routines.skin_am_items === 'string' ? routines.skin_am_items : JSON.stringify(routines.skin_am_items || []),
+          typeof routines.skin_pm_items === 'string' ? routines.skin_pm_items : JSON.stringify(routines.skin_pm_items || []),
+          typeof routines.hair_items === 'string' ? routines.hair_items : JSON.stringify(routines.hair_items || []),
+          typeof routines.beard_items === 'string' ? routines.beard_items : JSON.stringify(routines.beard_items || []),
+          typeof routines.supplement_schedule === 'string' ? routines.supplement_schedule : JSON.stringify(routines.supplement_schedule || []),
+          typeof routines.retinol_schedule === 'string' ? routines.retinol_schedule : JSON.stringify(routines.retinol_schedule || {}),
+          typeof routines.ketoconazole_schedule === 'string' ? routines.ketoconazole_schedule : JSON.stringify(routines.ketoconazole_schedule || {}),
+          now,
+          now,
+        ]
+      );
+      resolve(id);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getTransformationRoutines(profileId?: string): Promise<any | null> {
+  return new Promise((resolve, reject) => {
+    try {
+      let result;
+      if (profileId) {
+        result = db.getFirstSync(`SELECT * FROM transformation_routines WHERE profile_id = ?`, [profileId]);
+      } else {
+        result = db.getFirstSync(`SELECT * FROM transformation_routines WHERE user_id = 'local-user' ORDER BY created_at DESC LIMIT 1`);
+      }
+      resolve(result || null);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function createMealPlan(plan: Record<string, any>): Promise<string> {
+  return new Promise((resolve, reject) => {
+    try {
+      const id = plan.id || generateId();
+      const now = Date.now();
+      const toJson = (v: any) => typeof v === 'string' ? v : JSON.stringify(v || []);
+      db.runSync(
+        `INSERT INTO meal_plans (
+          id, user_id, profile_id, plan_name, day_1_meals, day_2_meals, day_3_meals, day_4_meals,
+          day_5_meals, day_6_meals, day_7_meals, is_active, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          plan.user_id || 'local-user',
+          plan.profile_id ?? null,
+          plan.plan_name ?? '7-Day Plan',
+          toJson(plan.day_1_meals),
+          toJson(plan.day_2_meals),
+          toJson(plan.day_3_meals),
+          toJson(plan.day_4_meals),
+          toJson(plan.day_5_meals),
+          toJson(plan.day_6_meals),
+          toJson(plan.day_7_meals),
+          plan.is_active !== 0 ? 1 : 0,
+          now,
+          now,
+        ]
+      );
+      resolve(id);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getMealPlan(profileId?: string): Promise<any | null> {
+  return new Promise((resolve, reject) => {
+    try {
+      let result;
+      if (profileId) {
+        result = db.getFirstSync(`SELECT * FROM meal_plans WHERE profile_id = ? AND is_active = 1`, [profileId]);
+      } else {
+        result = db.getFirstSync(`SELECT * FROM meal_plans WHERE user_id = 'local-user' AND is_active = 1 ORDER BY created_at DESC LIMIT 1`);
+      }
+      resolve(result || null);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function createMealPlanAdherence(adherence: Record<string, any>): Promise<string> {
+  return new Promise((resolve, reject) => {
+    try {
+      const id = adherence.id || generateId();
+      db.runSync(
+        `INSERT INTO meal_plan_adherence (
+          id, user_id, meal_plan_id, adherence_date, day_of_week, breakfast_completed, lunch_completed,
+          post_workout_completed, dinner_completed, swaps, notes, created_at, protein_grams
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          adherence.user_id || 'local-user',
+          adherence.meal_plan_id ?? null,
+          adherence.adherence_date,
+          adherence.day_of_week ?? new Date(adherence.adherence_date).getDay(),
+          adherence.breakfast_completed ? 1 : 0,
+          adherence.lunch_completed ? 1 : 0,
+          adherence.post_workout_completed ? 1 : 0,
+          adherence.dinner_completed ? 1 : 0,
+          typeof adherence.swaps === 'string' ? adherence.swaps : JSON.stringify(adherence.swaps || []),
+          adherence.notes ?? null,
+          Date.now(),
+          adherence.protein_grams ?? null,
+        ]
+      );
+      resolve(id);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getMealPlanAdherenceByDate(date: number): Promise<any | null> {
+  return new Promise((resolve, reject) => {
+    try {
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+      const result = db.getFirstSync(
+        `SELECT * FROM meal_plan_adherence WHERE adherence_date >= ? AND adherence_date <= ?`,
+        [startOfDay.getTime(), endOfDay.getTime()]
+      );
+      resolve(result || null);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getMealPlanAdherenceInRange(startDate: number, endDate: number): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    try {
+      const rows = db.getAllSync(
+        `SELECT * FROM meal_plan_adherence WHERE adherence_date >= ? AND adherence_date <= ? ORDER BY adherence_date ASC`,
+        [startDate, endDate]
+      );
+      resolve(rows || []);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function updateMealPlanAdherence(id: string, updates: Record<string, any>): Promise<void> {
+  return new Promise((resolve, reject) => {
+    try {
+      const fields: string[] = [];
+      const values: any[] = [];
+      const map: Record<string, string> = {
+        breakfast_completed: 'breakfast_completed',
+        lunch_completed: 'lunch_completed',
+        post_workout_completed: 'post_workout_completed',
+        dinner_completed: 'dinner_completed',
+        swaps: 'swaps',
+        notes: 'notes',
+        protein_grams: 'protein_grams',
+      };
+      Object.entries(updates).forEach(([key, value]) => {
+        if (map[key] && value !== undefined) {
+          fields.push(`${map[key]} = ?`);
+          values.push(key === 'swaps' && typeof value !== 'string' ? JSON.stringify(value) : value);
+        }
+      });
+      if (fields.length === 0) {
+        resolve();
+        return;
+      }
+      values.push(id);
+      db.runSync(`UPDATE meal_plan_adherence SET ${fields.join(', ')} WHERE id = ?`, values);
+      resolve();
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function createWorkoutPlan(plan: Record<string, any>): Promise<string> {
+  return new Promise((resolve, reject) => {
+    try {
+      const id = plan.id || generateId();
+      const now = Date.now();
+      const toJson = (v: any) => typeof v === 'string' ? v : JSON.stringify(v || []);
+      db.runSync(
+        `INSERT INTO workout_plans (
+          id, user_id, profile_id, plan_name, day_1_exercises, day_2_exercises, day_3_exercises,
+          day_4_exercises, day_5_exercises, is_active, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          plan.user_id || 'local-user',
+          plan.profile_id ?? null,
+          plan.plan_name ?? '5-Day Split',
+          toJson(plan.day_1_exercises),
+          toJson(plan.day_2_exercises),
+          toJson(plan.day_3_exercises),
+          toJson(plan.day_4_exercises),
+          toJson(plan.day_5_exercises),
+          plan.is_active !== 0 ? 1 : 0,
+          now,
+          now,
+        ]
+      );
+      resolve(id);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getWorkoutPlan(profileId?: string): Promise<any | null> {
+  return new Promise((resolve, reject) => {
+    try {
+      let result;
+      if (profileId) {
+        result = db.getFirstSync(`SELECT * FROM workout_plans WHERE profile_id = ? AND is_active = 1`, [profileId]);
+      } else {
+        result = db.getFirstSync(`SELECT * FROM workout_plans WHERE user_id = 'local-user' AND is_active = 1 ORDER BY created_at DESC LIMIT 1`);
+      }
+      resolve(result || null);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+/** 5-day split tags for transformation tracking */
+export const WORKOUT_SPLIT_TAGS = ['Push', 'Pull', 'Legs', 'Upper', 'Lower'] as const;
+
+export function createWorkoutLog(log: Record<string, any>): Promise<string> {
+  return new Promise((resolve, reject) => {
+    try {
+      const id = log.id || generateId();
+      const startedAt = log.started_at || Date.now();
+      const endedAt = log.ended_at || startedAt + (log.duration || 60) * 60 * 1000;
+      const splitTag = log.split_tag ?? (WORKOUT_SPLIT_TAGS.includes(log.workout_type) ? log.workout_type : null);
+      const isLegDay = log.is_leg_day != null ? (log.is_leg_day ? 1 : 0) : (splitTag === 'Legs' || splitTag === 'Lower' ? 1 : 0);
+      db.runSync(
+        `INSERT INTO workout_logs (
+          id, user_id, workout_plan_id, workout_type, day_number, exercises_data, duration,
+          incline_walk_minutes, intensity, calories_burned, note, started_at, ended_at, created_at,
+          split_tag, progressive_overload, is_leg_day
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          log.user_id || 'local-user',
+          log.workout_plan_id ?? null,
+          log.workout_type,
+          log.day_number ?? null,
+          typeof log.exercises_data === 'string' ? log.exercises_data : JSON.stringify(log.exercises_data || []),
+          log.duration || 60,
+          log.incline_walk_minutes ?? null,
+          log.intensity ?? null,
+          log.calories_burned ?? null,
+          log.note ?? null,
+          startedAt,
+          endedAt,
+          Date.now(),
+          splitTag ?? null,
+          log.progressive_overload ? 1 : 0,
+          isLegDay,
+        ]
+      );
+      resolve(id);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getWorkoutLogs(startDate?: number, endDate?: number): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    try {
+      let query = `SELECT * FROM workout_logs ORDER BY started_at DESC`;
+      const params: any[] = [];
+      if (startDate && endDate) {
+        query = `SELECT * FROM workout_logs WHERE started_at >= ? AND started_at <= ? ORDER BY started_at DESC`;
+        params.push(startDate, endDate);
+      } else if (startDate) {
+        query = `SELECT * FROM workout_logs WHERE started_at >= ? ORDER BY started_at DESC`;
+        params.push(startDate);
+      }
+      const result = db.getAllSync(query, params);
+      resolve(result || []);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function createWeeklyCheckin(checkin: Record<string, any>): Promise<string> {
+  return new Promise((resolve, reject) => {
+    try {
+      const id = checkin.id || generateId();
+      db.runSync(
+        `INSERT INTO weekly_checkins (
+          id, user_id, checkin_date, weight_kg, waist_cm, body_fat_pct, strength_prs, adherence_pct, notes, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          checkin.user_id || 'local-user',
+          checkin.checkin_date || Date.now(),
+          checkin.weight_kg ?? null,
+          checkin.waist_cm ?? null,
+          checkin.body_fat_pct ?? null,
+          checkin.strength_prs ?? null,
+          checkin.adherence_pct ?? null,
+          checkin.notes ?? null,
+          Date.now(),
+        ]
+      );
+      resolve(id);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getWeeklyCheckins(limit?: number): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    try {
+      const query = limit
+        ? `SELECT * FROM weekly_checkins ORDER BY checkin_date DESC LIMIT ?`
+        : `SELECT * FROM weekly_checkins ORDER BY checkin_date DESC`;
+      const result = db.getAllSync(query, limit ? [limit] : []);
+      resolve(result || []);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function createProgressPhotoMeta(meta: Record<string, any>): Promise<string> {
+  return new Promise((resolve, reject) => {
+    try {
+      const id = meta.id || generateId();
+      db.runSync(
+        `INSERT INTO progress_photos_meta (id, user_id, photo_date, lighting_notes, angles, notes, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          meta.user_id || 'local-user',
+          meta.photo_date || Date.now(),
+          meta.lighting_notes ?? null,
+          meta.angles ?? null,
+          meta.notes ?? null,
+          Date.now(),
+        ]
+      );
+      resolve(id);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getProgressPhotosMeta(limit?: number): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    try {
+      const query = limit
+        ? `SELECT * FROM progress_photos_meta ORDER BY photo_date DESC LIMIT ?`
+        : `SELECT * FROM progress_photos_meta ORDER BY photo_date DESC`;
+      const result = db.getAllSync(query, limit ? [limit] : []);
+      resolve(result || []);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function createHairlineCheck(check: Record<string, any>): Promise<string> {
+  return new Promise((resolve, reject) => {
+    try {
+      const id = check.id || generateId();
+      db.runSync(
+        `INSERT INTO hairline_checks (id, user_id, check_date, notes, created_at)
+         VALUES (?, ?, ?, ?, ?)`,
+        [
+          id,
+          check.user_id || 'local-user',
+          check.check_date || Date.now(),
+          check.notes ?? null,
+          Date.now(),
+        ]
+      );
+      resolve(id);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getLastHairlineCheck(): Promise<any | null> {
+  return new Promise((resolve, reject) => {
+    try {
+      const result = db.getFirstSync(
+        `SELECT * FROM hairline_checks ORDER BY check_date DESC LIMIT 1`
+      );
+      resolve(result || null);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getHairlineChecks(limit?: number): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    try {
+      const query = limit
+        ? `SELECT * FROM hairline_checks ORDER BY check_date DESC LIMIT ?`
+        : `SELECT * FROM hairline_checks ORDER BY check_date DESC`;
+      const result = db.getAllSync(query, limit ? [limit] : []);
+      resolve(result || []);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function createTransformationReminder(reminder: Record<string, any>): Promise<string> {
+  return new Promise((resolve, reject) => {
+    try {
+      const id = reminder.id || generateId();
+      const now = Date.now();
+      db.runSync(
+        `INSERT INTO transformation_reminders (
+          id, user_id, reminder_type, time_of_day, days_of_week, frequency, is_enabled, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          reminder.user_id || 'local-user',
+          reminder.reminder_type,
+          reminder.time_of_day ?? null,
+          typeof reminder.days_of_week === 'string' ? reminder.days_of_week : JSON.stringify(reminder.days_of_week || []),
+          reminder.frequency ?? null,
+          reminder.is_enabled !== 0 ? 1 : 0,
+          now,
+          now,
+        ]
+      );
+      resolve(id);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getTransformationReminders(): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    try {
+      const result = db.getAllSync(
+        `SELECT * FROM transformation_reminders WHERE is_enabled = 1 ORDER BY reminder_type ASC`
+      );
+      resolve(result || []);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getRoutineChecklistByDate(date: number): Promise<any | null> {
+  return new Promise((resolve, reject) => {
+    try {
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+      const result = db.getFirstSync(
+        `SELECT * FROM routine_checklists WHERE checklist_date >= ? AND checklist_date <= ?`,
+        [startOfDay.getTime(), endOfDay.getTime()]
+      );
+      resolve(result || null);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function createOrUpdateRoutineChecklist(checklist: Record<string, any>): Promise<string> {
+  return new Promise((resolve, reject) => {
+    try {
+      const date = checklist.checklist_date || Date.now();
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const dateTs = startOfDay.getTime();
+
+      const endOfDay = dateTs + 24 * 60 * 60 * 1000 - 1;
+      const existing = db.getFirstSync(
+        `SELECT * FROM routine_checklists WHERE checklist_date >= ? AND checklist_date <= ?`,
+        [dateTs, endOfDay]
+      );
+
+      const toInt = (v: any) => (v ? 1 : 0);
+      const fields = [
+        'skin_am_done', 'skin_pm_done', 'sunscreen_done', 'retinol_done', 'hair_wash_done',
+        'conditioner_done', 'beard_oil_done', 'supplements_morning_done', 'supplements_postworkout_done',
+        'supplements_night_done', 'steps_done', 'steps_count', 'workout_done', 'ketoconazole_done', 'microneedling_done'
+      ];
+      const values: any[] = [];
+
+      if (existing) {
+        const updates: string[] = ['updated_at = ?'];
+        values.push(Date.now());
+        fields.forEach(f => {
+          if (checklist[f] !== undefined) {
+            updates.push(`${f} = ?`);
+            values.push(f === 'steps_count' ? (checklist[f] ?? existing[f]) : toInt(checklist[f]));
+          }
+        });
+        if (updates.length > 1) {
+          values.push(existing.id);
+          db.runSync(`UPDATE routine_checklists SET ${updates.join(', ')} WHERE id = ?`, values);
+        }
+        return Promise.resolve(existing.id);
+      }
+
+      const id = generateId();
+      db.runSync(
+        `INSERT INTO routine_checklists (
+          id, user_id, checklist_date, skin_am_done, skin_pm_done, sunscreen_done, retinol_done,
+          hair_wash_done, conditioner_done, beard_oil_done, supplements_morning_done, supplements_postworkout_done,
+          supplements_night_done, steps_done, steps_count, workout_done, ketoconazole_done, microneedling_done,
+          created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          checklist.user_id || 'local-user',
+          dateTs,
+          toInt(checklist.skin_am_done),
+          toInt(checklist.skin_pm_done),
+          toInt(checklist.sunscreen_done),
+          toInt(checklist.retinol_done),
+          toInt(checklist.hair_wash_done),
+          toInt(checklist.conditioner_done),
+          toInt(checklist.beard_oil_done),
+          toInt(checklist.supplements_morning_done),
+          toInt(checklist.supplements_postworkout_done),
+          toInt(checklist.supplements_night_done),
+          toInt(checklist.steps_done),
+          checklist.steps_count ?? null,
+          toInt(checklist.workout_done),
+          toInt(checklist.ketoconazole_done),
+          toInt(checklist.microneedling_done),
+          Date.now(),
+          Date.now(),
+        ]
+      );
+      resolve(id);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function getRoutineChecklistsInRange(startDate: number, endDate: number): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    try {
+      const rows = db.getAllSync(
+        `SELECT * FROM routine_checklists WHERE checklist_date >= ? AND checklist_date <= ? ORDER BY checklist_date ASC`,
+        [startDate, endDate]
+      );
+      resolve(rows || []);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+/** Count consecutive days (including today) with meaningful checklist completion (5+ items done). */
+export async function getTransformationStreak(): Promise<number> {
+  const dayMs = 24 * 60 * 60 * 1000;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  let checkDate = today.getTime();
+  let streak = 0;
+  const doneFields = [
+    'skin_am_done', 'skin_pm_done', 'sunscreen_done', 'hair_wash_done', 'conditioner_done',
+    'beard_oil_done', 'supplements_morning_done', 'supplements_postworkout_done',
+    'supplements_night_done', 'workout_done',
+  ];
+  while (true) {
+    const cl = await getRoutineChecklistByDate(checkDate);
+    const count = cl ? doneFields.filter((f) => cl[f]).length : 0;
+    if (count < 5) break;
+    streak++;
+    checkDate -= dayMs;
+  }
+  return streak;
 }

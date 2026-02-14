@@ -401,6 +401,25 @@ export default function ProfileScreen() {
           
           <TouchableOpacity 
             style={[styles.settingItem, { backgroundColor: tokens.colors.card }, shadows.subtle]} 
+            onPress={() => router.push('/transformation')}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.settingIcon, { backgroundColor: tokens.colors.primary + '20' }]}>
+              <IconSymbol name="figure.run" size={18} color={tokens.colors.primary} />
+            </View>
+            <View style={styles.settingContent}>
+              <Text style={[styles.settingTitle, { color: tokens.colors.text }]}>
+                Transformation Tracker
+              </Text>
+              <Text style={[styles.settingSubtitle, { color: tokens.colors.textMuted }]}>
+                6-month recomp plan • Daily checklist • Progress
+              </Text>
+            </View>
+            <IconSymbol name="chevron.right" size={16} color={tokens.colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.settingItem, { backgroundColor: tokens.colors.card }, shadows.subtle]} 
             onPress={handleExportData}
             activeOpacity={0.7}
           >

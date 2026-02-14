@@ -2,7 +2,7 @@
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
-import { getAppointments, getDoseSchedulesByParent, getMedications, getMeditationRoutines, getSupplements } from './db';
+import { getAppointments, getDoseSchedulesByParent, getMedications, getMeditationRoutines, getSupplements, getTransformationProfile, getTransformationReminders } from './db';
 
 // Check if we're in Expo Go (where notifications have limitations)
 const isExpoGo = Constants.executionEnvironment === 'storeClient';
@@ -57,6 +57,17 @@ async function setupAndroidChannels() {
         enableVibrate: true,
         showBadge: true,
         description: 'Reminders for your meditation practice',
+      });
+
+      // Transformation channel (sunscreen, retinol, ketoconazole, etc.)
+      await Notifications.setNotificationChannelAsync('transformation', {
+        name: 'Transformation Tracker',
+        importance: Notifications.AndroidImportance.HIGH,
+        vibrationPattern: [0, 250, 250, 250],
+        sound: 'default',
+        enableVibrate: true,
+        showBadge: true,
+        description: 'Sunscreen, retinol, ketoconazole, weigh-in reminders',
       });
 
       // Android notification channels set up successfully
@@ -289,6 +300,87 @@ async function scheduleMeditationReminders() {
   }
 }
 
+// Schedule transformation reminders (sunscreen daily, retinol, ketoconazole, weigh-in)
+async function scheduleTransformationReminders() {
+  const profile = await getTransformationProfile();
+  if (!profile?.onboarding_complete) return;
+
+  const reminders = await getTransformationReminders();
+  const now = Date.now();
+
+  for (const reminder of reminders) {
+    if (!reminder.is_enabled) continue;
+
+    let daysOfWeek: number[] = [0, 1, 2, 3, 4, 5, 6];
+    try {
+      if (reminder.days_of_week) {
+        daysOfWeek = JSON.parse(reminder.days_of_week) as number[];
+      }
+    } catch {
+      // Use all days if parse fails
+    }
+
+    const [hours, minutes] = (reminder.time_of_day || '08:00').split(':').map(Number);
+
+    for (let dayOffset = 0; dayOffset < 30; dayOffset++) {
+      const date = new Date();
+      date.setDate(date.getDate() + dayOffset);
+      if (!daysOfWeek.includes(date.getDay())) continue;
+
+      date.setHours(hours, minutes, 0, 0);
+      const scheduledTime = date.getTime();
+      if (dayOffset === 0 && scheduledTime < now) continue;
+
+      const dateStr = date.toISOString().split('T')[0];
+      const identifier = `transformation-${reminder.reminder_type}-${dateStr}`;
+
+      let title = 'Transformation Reminder';
+      let body = 'Time for your routine';
+      switch (reminder.reminder_type) {
+        case 'sunscreen':
+          title = 'Sunscreen reminder';
+          body = 'Apply SPF 50 – non-negotiable for skin health';
+          break;
+        case 'retinol':
+          title = 'Retinol night';
+          body = 'Apply retinol serum. Remember sunscreen tomorrow!';
+          break;
+        case 'ketoconazole':
+          title = 'Ketoconazole wash';
+          body = 'Leave on 4-5 minutes';
+          break;
+        case 'microneedling':
+          title = 'Microneedling';
+          body = 'Weekly temples session (0.5mm)';
+          break;
+        case 'weigh_in':
+          title = 'Weekly weigh-in';
+          body = 'Sunday morning – same conditions';
+          break;
+      }
+
+      try {
+        await Notifications.scheduleNotificationAsync({
+          identifier,
+          content: {
+            title,
+            body,
+            sound: true,
+            data: { type: 'transformation', reminderType: reminder.reminder_type },
+            ...(Platform.OS === 'android' && {
+              channelId: 'transformation',
+              priority: Notifications.AndroidNotificationPriority.HIGH,
+            }),
+          },
+          trigger: { type: 'date', date },
+        });
+      } catch (error) {
+        // Error scheduling transformation reminder
+      }
+    }
+  }
+}
+
 // Clean up expired notifications
 async function cleanupExpiredNotifications() {
   try {
@@ -478,6 +570,9 @@ export async function rescheduleAllReminders(force: boolean = false) {
     
     // Schedule meditation reminders (only if routines exist)
     await scheduleMeditationReminders();
+    
+    // Schedule transformation reminders (if profile exists)
+    await scheduleTransformationReminders();
     
     // Get count of scheduled notifications
     const scheduled = await Notifications.getAllScheduledNotificationsAsync();

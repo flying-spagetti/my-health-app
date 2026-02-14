@@ -1,4 +1,5 @@
 import { initDb } from '@/services/db';
+import { seedTransformationData, ensureTransformationPlans } from '@/services/seed-transformation';
 import { rescheduleAllReminders, clearBadge, incrementBadge } from '@/services/reminders';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter } from 'expo-router';
@@ -33,7 +34,11 @@ function RootLayoutInner() {
       try {
         // Initialize database
         initDb();
-        
+        // Seed transformation data if no profile exists
+        await seedTransformationData().catch(() => false);
+        // Ensure meal/workout plans exist when profile exists but plans were never created
+        await ensureTransformationPlans().catch(() => {});
+
         // Check and reschedule reminders if needed (don't force - only reschedule if missing)
         // This prevents bombarding notifications on app startup
         setTimeout(() => {
@@ -71,6 +76,8 @@ function RootLayoutInner() {
         router.push('/appointment-tracker');
       } else if (data?.type === 'meditation') {
         router.push('/meditation-tracker');
+      } else if (data?.type === 'transformation') {
+        router.push('/transformation/today');
       }
     });
 
@@ -288,6 +295,14 @@ function RootLayoutInner() {
             options={{
               title: 'Doctor Visit Summary',
               headerShown: true,
+            }}
+          />
+          
+          {/* Transformation Tracker */}
+          <Stack.Screen
+            name="transformation"
+            options={{
+              headerShown: false,
             }}
           />
         </Stack>

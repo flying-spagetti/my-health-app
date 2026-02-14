@@ -496,6 +496,28 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        {/* Transformation Tracker Card */}
+        <TouchableOpacity
+          style={[styles.migraineCard, { backgroundColor: tokens.colors.card }, shadows.low]}
+          onPress={() => router.push('/transformation')}
+          activeOpacity={0.7}
+        >
+          <View style={styles.migraineHeader}>
+            <View style={[styles.migraineIconContainer, { backgroundColor: tokens.colors.primary + '20' }]}>
+              <FontAwesome5 name="dumbbell" size={20} color={tokens.colors.primary} />
+            </View>
+            <View style={styles.migraineInfo}>
+              <Text style={[styles.migraineTitle, { color: tokens.colors.text }]}>
+                Transformation Tracker
+              </Text>
+              <Text style={[styles.migraineSubtitle, { color: tokens.colors.textMuted }]}>
+                6-month recomp plan • Daily checklist • Progress
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={18} color={tokens.colors.textMuted} />
+          </View>
+        </TouchableOpacity>
+
         {/* Migraine Tracker Card */}
         <TouchableOpacity
           style={[styles.migraineCard, { backgroundColor: tokens.colors.card }, shadows.low]}
